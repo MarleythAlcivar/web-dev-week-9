@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 
 app = Flask(__name__)
@@ -15,4 +16,4 @@ def usuario(nombre):
     return f'<h2>Bienvenido, {nombre}!</h2><p>¡Hola, {nombre}! Bienvenido a la Biblioteca Virtual.</p><a href="/">Volver al inicio</a>'
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)

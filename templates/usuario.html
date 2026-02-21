@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}{{ nombre }} - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="usuario-section">
+    <div class="user-header">
+        <div class="user-avatar">
+            <div class="avatar-placeholder">👤</div>
+        </div>
+        <div class="user-info">
+            <h1>Bienvenido, {{ nombre }}!</h1>
+            <p>Miembro desde: Enero 2024</p>
+            <p>Tipo de cuenta: Estudiante</p>
+        </div>
+    </div>
+    
+    <div class="user-dashboard">
+        <div class="dashboard-section">
+            <h3>📚 Mis Libros</h3>
+            <div class="user-stats">
+                <div class="stat-card">
+                    <h4>12</h4>
+                    <p>Libros leídos</p>
+                </div>
+                <div class="stat-card">
+                    <h4>5</h4>
+                    <p>Libros en lectura</p>
+                </div>
+                <div class="stat-card">
+                    <h4>28</h4>
+                    <p>Libros favoritos</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-section">
+            <h3>📖 Leyendo Actualmente</h3>
+            <div class="current-reading">
+                <div class="reading-item">
+                    <h4>Programación en Python</h4>
+                    <p>Progreso: 65%</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 65%"></div>
+                    </div>
+                    <a href="{{ url_for('libro', titulo='Programación en Python') }}" class="btn-small">Continuar leyendo</a>
+                </div>
+                <div class="reading-item">
+                    <h4>Cálculo Diferencial</h4>
+                    <p>Progreso: 30%</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 30%"></div>
+                    </div>
+                    <a href="{{ url_for('libro', titulo='Cálculo Diferencial') }}" class="btn-small">Continuar leyendo</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-section">
+            <h3>❤️ Libros Favoritos</h3>
+            <div class="favorites-grid">
+                <div class="favorite-book">
+                    <h4>Biología Molecular</h4>
+                    <p>Carlos Rodríguez</p>
+                    <a href="{{ url_for('libro', titulo='Biología Molecular') }}" class="btn-small">Ver detalles</a>
+                </div>
+                <div class="favorite-book">
+                    <h4>Historia del Ecuador</h4>
+                    <p>Ana López</p>
+                    <a href="{{ url_for('libro', titulo='Historia del Ecuador') }}" class="btn-small">Ver detalles</a>
+                </div>
+                <div class="favorite-book">
+                    <h4>Ingeniería de Software</h4>
+                    <p>Roberto Martínez</p>
+                    <a href="{{ url_for('libro', titulo='Ingeniería de Software') }}" class="btn-small">Ver detalles</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-section">
+            <h3>📊 Actividad Reciente</h3>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <span class="activity-date">Hoy</span>
+                    <span class="activity-desc">Comenzaste a leer "Programación en Python"</span>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-date">Ayer</span>
+                    <span class="activity-desc">Añadiste "Biología Molecular" a favoritos</span>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-date">Hace 3 días</span>
+                    <span class="activity-desc">Finalizaste "Matemáticas Básicas"</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-section">
+            <h3>⚙️ Configuración de Cuenta</h3>
+            <div class="account-settings">
+                <button class="btn-small">Editar perfil</button>
+                <button class="btn-small btn-secondary">Cambiar contraseña</button>
+                <button class="btn-small btn-secondary">Preferencias de lectura</button>
+                <button class="btn-small btn-secondary">Notificaciones</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

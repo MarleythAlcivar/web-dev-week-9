@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Libros - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="libros-section">
+    <h2>Catálogo de Libros</h2>
+    
+    <div class="search-bar">
+        <input type="text" placeholder="Buscar libros por título, autor o ISBN..." class="search-input">
+        <button class="btn-search">🔍 Buscar</button>
+    </div>
+    
+    <div class="filter-section">
+        <h3>Filtros</h3>
+        <div class="filters">
+            <select class="filter-select">
+                <option>Todas las categorías</option>
+                <option>Ciencias Exactas</option>
+                <option>Ciencias Sociales</option>
+                <option>Ingeniería</option>
+                <option>Medicina</option>
+                <option>Artes y Humanidades</option>
+            </select>
+            <select class="filter-select">
+                <option>Todos los idiomas</option>
+                <option>Español</option>
+                <option>Inglés</option>
+                <option>Francés</option>
+            </select>
+            <select class="filter-select">
+                <option>Cualquier año</option>
+                <option>2024</option>
+                <option>2023</option>
+                <option>2022</option>
+                <option>2021</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="books-grid">
+        <div class="book-card">
+            <div class="book-cover">📚</div>
+            <div class="book-info">
+                <h4>Programación en Python</h4>
+                <p class="book-author">Autor: Juan Pérez</p>
+                <p class="book-year">Año: 2023</p>
+                <p class="book-category">Categoría: Ciencias Exactas</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('libro', titulo='Programación en Python') }}" class="btn-small">Ver detalles</a>
+                    <button class="btn-small btn-secondary">Leer en línea</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <div class="book-cover">📖</div>
+            <div class="book-info">
+                <h4>Cálculo Diferencial</h4>
+                <p class="book-author">Autor: María González</p>
+                <p class="book-year">Año: 2022</p>
+                <p class="book-category">Categoría: Ciencias Exactas</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('libro', titulo='Cálculo Diferencial') }}" class="btn-small">Ver detalles</a>
+                    <button class="btn-small btn-secondary">Leer en línea</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <div class="book-cover">📘</div>
+            <div class="book-info">
+                <h4>Biología Molecular</h4>
+                <p class="book-author">Autor: Carlos Rodríguez</p>
+                <p class="book-year">Año: 2024</p>
+                <p class="book-category">Categoría: Ciencias Naturales</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('libro', titulo='Biología Molecular') }}" class="btn-small">Ver detalles</a>
+                    <button class="btn-small btn-secondary">Leer en línea</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <div class="book-cover">📗</div>
+            <div class="book-info">
+                <h4>Historia del Ecuador</h4>
+                <p class="book-author">Autor: Ana López</p>
+                <p class="book-year">Año: 2023</p>
+                <p class="book-category">Categoría: Ciencias Sociales</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('libro', titulo='Historia del Ecuador') }}" class="btn-small">Ver detalles</a>
+                    <button class="btn-small btn-secondary">Leer en línea</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <div class="book-cover">📕</div>
+            <div class="book-info">
+                <h4>Ingeniería de Software</h4>
+                <p class="book-author">Autor: Roberto Martínez</p>
+                <p class="book-year">Año: 2024</p>
+                <p class="book-category">Categoría: Ingeniería</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('libro', titulo='Ingeniería de Software') }}" class="btn-small">Ver detalles</a>
+                    <button class="btn-small btn-secondary">Leer en línea</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <div class="book-cover">📙</div>
+            <div class="book-info">
+                <h4>Psicología Educativa</h4>
+                <p class="book-author">Autor: Laura Fernández</p>
+                <p class="book-year">Año: 2022</p>
+                <p class="book-category">Categoría: Educación</p>
+                <div class="book-actions">
+                    <a href="{{ url_for('libro', titulo='Psicología Educativa') }}" class="btn-small">Ver detalles</a>
+                    <button class="btn-small btn-secondary">Leer en línea</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

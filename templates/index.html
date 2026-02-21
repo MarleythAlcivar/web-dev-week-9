@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<section class="text-center">
+    <h2>Bienvenido a la Biblioteca Virtual</h2>
+    <p>Tu portal para consulta de libros y recursos académicos.</p>
+</section>
+
+<section>
+    <h3 class="text-center">Servicios</h3>
+    <div class="grid">
+        <div class="card">
+            <h3>📚 Catálogo Completo</h3>
+            <p>Accede a nuestra extensa colección de libros académicos y recursos educativos.</p>
+            <a href="{{ url_for('catalogo') }}" class="btn">Explorar Catálogo</a>
+        </div>
+        
+        <div class="card">
+            <h3>🔍 Búsqueda Avanzada</h3>
+            <p>Encuentra fácilmente los libros que necesitas con nuestro sistema de búsqueda.</p>
+            <a href="{{ url_for('libros') }}" class="btn">Buscar Libros</a>
+        </div>
+        
+        <div class="card">
+            <h3>👤 Área Personal</h3>
+            <p>Gestiona tu cuenta y accede a tus libros favoritos.</p>
+            <a href="{{ url_for('usuario', nombre='invitado') }}" class="btn">Mi Cuenta</a>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h3 class="text-center">Libros Recientes</h3>
+    <div class="grid">
+        <div class="card">
+            <h4>Programación en Python</h4>
+            <p>Aprende a programar con Python desde cero.</p>
+            <a href="{{ url_for('libro', titulo='Programación en Python') }}" class="btn-small">Ver detalles</a>
+        </div>
+        <div class="card">
+            <h4>Cálculo Diferencial</h4>
+            <p>Fundamentos matemáticos para ingeniería.</p>
+            <a href="{{ url_for('libro', titulo='Cálculo Diferencial') }}" class="btn-small">Ver detalles</a>
+        </div>
+        <div class="card">
+            <h4>Biología Molecular</h4>
+            <p>Conceptos básicos de biología molecular moderna.</p>
+            <a href="{{ url_for('libro', titulo='Biología Molecular') }}" class="btn-small">Ver detalles</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

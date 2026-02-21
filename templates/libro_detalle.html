@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="libro-detalle">
+    <nav class="breadcrumb">
+        <a href="{{ url_for('index') }}">Inicio</a> &gt; 
+        <a href="{{ url_for('libros') }}">Libros</a> &gt; 
+        <span>{{ titulo }}</span>
+    </nav>
+    
+    <div class="book-detail-container">
+        <div class="book-cover-large">
+            <div class="cover-placeholder">📚</div>
+        </div>
+        
+        <div class="book-info-detail">
+            <h1>{{ titulo }}</h1>
+            
+            <div class="book-meta">
+                <p><strong>Autor:</strong> Autor del libro</p>
+                <p><strong>Editorial:</strong> Editorial UEA</p>
+                <p><strong>Año:</strong> 2023</p>
+                <p><strong>ISBN:</strong> 978-123-456-789-0</p>
+                <p><strong>Páginas:</strong> 350</p>
+                <p><strong>Categoría:</strong> Ciencias Exactas</p>
+                <p><strong>Idioma:</strong> Español</p>
+            </div>
+            
+            <div class="book-description">
+                <h3>Descripción</h3>
+                <p>Este libro es una obra fundamental para estudiantes y profesionales del área. Ofrece un enfoque práctico y teórico que facilita el aprendizaje y aplicación de los conceptos presentados.</p>
+                
+                <h3>Contenido</h3>
+                <ul>
+                    <li>Capítulo 1: Introducción y conceptos básicos</li>
+                    <li>Capítulo 2: Fundamentos teóricos</li>
+                    <li>Capítulo 3: Aplicaciones prácticas</li>
+                    <li>Capítulo 4: Estudios de caso</li>
+                    <li>Capítulo 5: Ejercicios y problemas</li>
+                </ul>
+            </div>
+            
+            <div class="book-actions-detail">
+                <button class="btn">📖 Leer en línea</button>
+                <button class="btn btn-secondary">📥 Descargar PDF</button>
+                <button class="btn btn-secondary">❤️ Añadir a favoritos</button>
+            </div>
+            
+            <div class="book-stats">
+                <div class="stat">
+                    <span class="stat-number">4.5</span>
+                    <span class="stat-label">⭐ Calificación</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">1,234</span>
+                    <span class="stat-label">👥 Lectores</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">89</span>
+                    <span class="stat-label">💬 Reseñas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="related-books">
+        <h3>Libros Relacionados</h3>
+        <div class="related-grid">
+            <div class="related-book">
+                <h4>Libro Relacionado 1</h4>
+                <p>Autor: Juan Pérez</p>
+                <a href="{{ url_for('libro', titulo='Libro Relacionado 1') }}" class="btn-small">Ver detalles</a>
+            </div>
+            <div class="related-book">
+                <h4>Libro Relacionado 2</h4>
+                <p>Autor: María González</p>
+                <a href="{{ url_for('libro', titulo='Libro Relacionado 2') }}" class="btn-small">Ver detalles</a>
+            </div>
+            <div class="related-book">
+                <h4>Libro Relacionado 3</h4>
+                <p>Autor: Carlos Rodríguez</p>
+                <a href="{{ url_for('libro', titulo='Libro Relacionado 3') }}" class="btn-small">Ver detalles</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

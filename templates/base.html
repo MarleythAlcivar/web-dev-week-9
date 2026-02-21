@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Biblioteca Virtual{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Biblioteca Virtual</h1>
+        <p>Tu portal para consulta de libros y recursos académicos</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}">Inicio</a></li>
+            <li><a href="{{ url_for('about') }}">Acerca de</a></li>
+            <li><a href="{{ url_for('catalogo') }}">Catálogo</a></li>
+            <li><a href="{{ url_for('libros') }}">Libros</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Biblioteca Virtual. Todos los derechos reservados.</p>
+        <p>Universidad Estatal Amazónica</p>
+    </footer>
+</body>
+</html>

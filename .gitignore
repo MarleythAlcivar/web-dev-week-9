@@ -41,3 +41,11 @@ instance/
 
 # Logs
 *.log
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+
+# Render
+.render/

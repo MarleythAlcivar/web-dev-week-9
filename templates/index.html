@@ -32,23 +32,25 @@
 </section>
 
 <section>
-    <h3 class="text-center">Libros Recientes</h3>
+    <h3 class="text-center">Libros Destacados</h3>
     <div class="grid">
-        <div class="card">
-            <h4>Programación en Python</h4>
-            <p>Aprende a programar con Python desde cero.</p>
-            <a href="{{ url_for('libro', titulo='Programación en Python') }}" class="btn-small">Ver detalles</a>
-        </div>
-        <div class="card">
-            <h4>Cálculo Diferencial</h4>
-            <p>Fundamentos matemáticos para ingeniería.</p>
-            <a href="{{ url_for('libro', titulo='Cálculo Diferencial') }}" class="btn-small">Ver detalles</a>
-        </div>
-        <div class="card">
-            <h4>Biología Molecular</h4>
-            <p>Conceptos básicos de biología molecular moderna.</p>
-            <a href="{{ url_for('libro', titulo='Biología Molecular') }}" class="btn-small">Ver detalles</a>
-        </div>
+        {% if productos_destacados %}
+            {% for producto in productos_destacados %}
+                <div class="card">
+                    <h4>{{ producto.nombre }}</h4>
+                    <p>{{ producto.autor }} - {{ producto.categoria }}</p>
+                    <p>Precio: ${{ "%.2f"|format(producto.precio) }}</p>
+                    <p>Stock: {{ producto.cantidad }} unidades</p>
+                    <a href="{{ url_for('libro', id=producto.id) }}" class="btn-small">Ver detalles</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <h4>No hay libros disponibles</h4>
+                <p>Agrega algunos productos al inventario para mostrarlos aquí.</p>
+                <a href="{{ url_for('libros') }}" class="btn-small">Ir al catálogo</a>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

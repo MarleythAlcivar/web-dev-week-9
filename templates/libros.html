@@ -7,121 +7,66 @@
     <h2>Catálogo de Libros</h2>
     
     <div class="search-bar">
-        <input type="text" placeholder="Buscar libros por título, autor o ISBN..." class="search-input">
-        <button class="btn-search">🔍 Buscar</button>
+        <form method="GET" action="{{ url_for('libros') }}">
+            <input type="text" name="busqueda" placeholder="Buscar libros por título, autor o ISBN..." 
+                   class="search-input" value="{{ busqueda_actual or '' }}">
+            <button type="submit" class="btn-search">🔍 Buscar</button>
+        </form>
     </div>
     
     <div class="filter-section">
         <h3>Filtros</h3>
         <div class="filters">
-            <select class="filter-select">
-                <option>Todas las categorías</option>
-                <option>Ciencias Exactas</option>
-                <option>Ciencias Sociales</option>
-                <option>Ingeniería</option>
-                <option>Medicina</option>
-                <option>Artes y Humanidades</option>
-            </select>
-            <select class="filter-select">
-                <option>Todos los idiomas</option>
-                <option>Español</option>
-                <option>Inglés</option>
-                <option>Francés</option>
-            </select>
-            <select class="filter-select">
-                <option>Cualquier año</option>
-                <option>2024</option>
-                <option>2023</option>
-                <option>2022</option>
-                <option>2021</option>
-            </select>
+            <form method="GET" action="{{ url_for('libros') }}">
+                <select name="categoria" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Todas las categorías</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria }}" {% if categoria_actual == categoria %}selected{% endif %}>
+                            {{ categoria }}
+                        </option>
+                    {% endfor %}
+                </select>
+                
+                <select name="autor" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Todos los autores</option>
+                    {% for autor in autores %}
+                        <option value="{{ autor }}" {% if autor_actual == autor %}selected{% endif %}>
+                            {{ autor }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
         </div>
     </div>
     
     <div class="books-grid">
-        <div class="book-card">
-            <div class="book-cover">📚</div>
-            <div class="book-info">
-                <h4>Programación en Python</h4>
-                <p class="book-author">Autor: Juan Pérez</p>
-                <p class="book-year">Año: 2023</p>
-                <p class="book-category">Categoría: Ciencias Exactas</p>
-                <div class="book-actions">
-                    <a href="{{ url_for('libro', titulo='Programación en Python') }}" class="btn-small">Ver detalles</a>
-                    <button class="btn-small btn-secondary">Leer en línea</button>
+        {% if productos %}
+            {% for producto in productos %}
+                <div class="book-card">
+                    <div class="book-cover">📚</div>
+                    <div class="book-info">
+                        <h4>{{ producto.nombre }}</h4>
+                        <p class="book-author">Autor: {{ producto.autor }}</p>
+                        <p class="book-price">Precio: ${{ "%.2f"|format(producto.precio) }}</p>
+                        <p class="book-category">Categoría: {{ producto.categoria }}</p>
+                        <p class="book-stock">Stock: {{ producto.cantidad }} unidades</p>
+                        {% if producto.isbn %}
+                            <p class="book-isbn">ISBN: {{ producto.isbn }}</p>
+                        {% endif %}
+                        <div class="book-actions">
+                            <a href="{{ url_for('libro', id=producto.id) }}" class="btn-small">Ver detalles</a>
+                            <button class="btn-small btn-secondary">Leer en línea</button>
+                        </div>
+                    </div>
                 </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-results">
+                <h3>No se encontraron libros</h3>
+                <p>No hay libros que coincidan con los criterios de búsqueda.</p>
+                <a href="{{ url_for('libros') }}" class="btn">Mostrar todos los libros</a>
             </div>
-        </div>
-        
-        <div class="book-card">
-            <div class="book-cover">📖</div>
-            <div class="book-info">
-                <h4>Cálculo Diferencial</h4>
-                <p class="book-author">Autor: María González</p>
-                <p class="book-year">Año: 2022</p>
-                <p class="book-category">Categoría: Ciencias Exactas</p>
-                <div class="book-actions">
-                    <a href="{{ url_for('libro', titulo='Cálculo Diferencial') }}" class="btn-small">Ver detalles</a>
-                    <button class="btn-small btn-secondary">Leer en línea</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="book-card">
-            <div class="book-cover">📘</div>
-            <div class="book-info">
-                <h4>Biología Molecular</h4>
-                <p class="book-author">Autor: Carlos Rodríguez</p>
-                <p class="book-year">Año: 2024</p>
-                <p class="book-category">Categoría: Ciencias Naturales</p>
-                <div class="book-actions">
-                    <a href="{{ url_for('libro', titulo='Biología Molecular') }}" class="btn-small">Ver detalles</a>
-                    <button class="btn-small btn-secondary">Leer en línea</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="book-card">
-            <div class="book-cover">📗</div>
-            <div class="book-info">
-                <h4>Historia del Ecuador</h4>
-                <p class="book-author">Autor: Ana López</p>
-                <p class="book-year">Año: 2023</p>
-                <p class="book-category">Categoría: Ciencias Sociales</p>
-                <div class="book-actions">
-                    <a href="{{ url_for('libro', titulo='Historia del Ecuador') }}" class="btn-small">Ver detalles</a>
-                    <button class="btn-small btn-secondary">Leer en línea</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="book-card">
-            <div class="book-cover">📕</div>
-            <div class="book-info">
-                <h4>Ingeniería de Software</h4>
-                <p class="book-author">Autor: Roberto Martínez</p>
-                <p class="book-year">Año: 2024</p>
-                <p class="book-category">Categoría: Ingeniería</p>
-                <div class="book-actions">
-                    <a href="{{ url_for('libro', titulo='Ingeniería de Software') }}" class="btn-small">Ver detalles</a>
-                    <button class="btn-small btn-secondary">Leer en línea</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="book-card">
-            <div class="book-cover">📙</div>
-            <div class="book-info">
-                <h4>Psicología Educativa</h4>
-                <p class="book-author">Autor: Laura Fernández</p>
-                <p class="book-year">Año: 2022</p>
-                <p class="book-category">Categoría: Educación</p>
-                <div class="book-actions">
-                    <a href="{{ url_for('libro', titulo='Psicología Educativa') }}" class="btn-small">Ver detalles</a>
-                    <button class="btn-small btn-secondary">Leer en línea</button>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

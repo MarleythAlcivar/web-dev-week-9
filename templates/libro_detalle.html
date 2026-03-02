@@ -1,89 +1,108 @@
 {% extends "base.html" %}
 
-{% block title %}{{ titulo }} - Biblioteca Virtual{% endblock %}
+{% block title %}
+    {% if producto %}
+        {{ producto.nombre }} - Biblioteca Virtual
+    {% else %}
+        Libro no encontrado - Biblioteca Virtual
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="libro-detalle">
     <nav class="breadcrumb">
         <a href="{{ url_for('index') }}">Inicio</a> &gt; 
         <a href="{{ url_for('libros') }}">Libros</a> &gt; 
-        <span>{{ titulo }}</span>
+        {% if producto %}
+            <span>{{ producto.nombre }}</span>
+        {% else %}
+            <span>No encontrado</span>
+        {% endif %}
     </nav>
     
-    <div class="book-detail-container">
-        <div class="book-cover-large">
-            <div class="cover-placeholder">📚</div>
-        </div>
-        
-        <div class="book-info-detail">
-            <h1>{{ titulo }}</h1>
-            
-            <div class="book-meta">
-                <p><strong>Autor:</strong> Autor del libro</p>
-                <p><strong>Editorial:</strong> Editorial UEA</p>
-                <p><strong>Año:</strong> 2023</p>
-                <p><strong>ISBN:</strong> 978-123-456-789-0</p>
-                <p><strong>Páginas:</strong> 350</p>
-                <p><strong>Categoría:</strong> Ciencias Exactas</p>
-                <p><strong>Idioma:</strong> Español</p>
+    {% if producto %}
+        <div class="book-detail-container">
+            <div class="book-cover-large">
+                <div class="cover-placeholder">📚</div>
             </div>
             
-            <div class="book-description">
-                <h3>Descripción</h3>
-                <p>Este libro es una obra fundamental para estudiantes y profesionales del área. Ofrece un enfoque práctico y teórico que facilita el aprendizaje y aplicación de los conceptos presentados.</p>
+            <div class="book-info-detail">
+                <h1>{{ producto.nombre }}</h1>
                 
-                <h3>Contenido</h3>
-                <ul>
-                    <li>Capítulo 1: Introducción y conceptos básicos</li>
-                    <li>Capítulo 2: Fundamentos teóricos</li>
-                    <li>Capítulo 3: Aplicaciones prácticas</li>
-                    <li>Capítulo 4: Estudios de caso</li>
-                    <li>Capítulo 5: Ejercicios y problemas</li>
-                </ul>
-            </div>
-            
-            <div class="book-actions-detail">
-                <button class="btn">📖 Leer en línea</button>
-                <button class="btn btn-secondary">📥 Descargar PDF</button>
-                <button class="btn btn-secondary">❤️ Añadir a favoritos</button>
-            </div>
-            
-            <div class="book-stats">
-                <div class="stat">
-                    <span class="stat-number">4.5</span>
-                    <span class="stat-label">⭐ Calificación</span>
+                <div class="book-meta">
+                    <p><strong>Autor:</strong> {{ producto.autor }}</p>
+                    <p><strong>Categoría:</strong> {{ producto.categoria }}</p>
+                    {% if producto.isbn %}
+                        <p><strong>ISBN:</strong> {{ producto.isbn }}</p>
+                    {% endif %}
+                    <p><strong>Precio:</strong> ${{ "%.2f"|format(producto.precio) }}</p>
+                    <p><strong>Stock disponible:</strong> {{ producto.cantidad }} unidades</p>
+                    <p><strong>Fecha de registro:</strong> {{ producto.fecha_creacion.strftime('%d/%m/%Y') }}</p>
+                    {% if producto.etiquetas %}
+                        <p><strong>Etiquetas:</strong> {{ producto.etiquetas | join(', ') }}</p>
+                    {% endif %}
                 </div>
-                <div class="stat">
-                    <span class="stat-number">1,234</span>
-                    <span class="stat-label">👥 Lectores</span>
+                
+                <div class="book-description">
+                    <h3>Descripción</h3>
+                    <p>{{ producto.nombre }} es una obra fundamental para estudiantes y profesionales del área. Ofrece un enfoque práctico y teórico que facilita el aprendizaje y aplicación de los conceptos presentados.</p>
+                    
+                    <h3>Características</h3>
+                    <ul>
+                        <li>ID del producto: {{ producto.id }}</li>
+                        <li>Categoría: {{ producto.categoria }}</li>
+                        <li>Autor: {{ producto.autor }}</li>
+                        <li>Precio: ${{ "%.2f"|format(producto.precio) }}</li>
+                        <li>Disponibilidad: {{ producto.cantidad }} unidades</li>
+                    </ul>
                 </div>
-                <div class="stat">
-                    <span class="stat-number">89</span>
-                    <span class="stat-label">💬 Reseñas</span>
+                
+                <div class="book-actions-detail">
+                    {% if producto.cantidad > 0 %}
+                        <button class="btn">📖 Leer en línea</button>
+                        <button class="btn btn-secondary">📥 Descargar PDF</button>
+                    {% else %}
+                        <button class="btn btn-disabled" disabled>📖 Agotado</button>
+                    {% endif %}
+                    <button class="btn btn-secondary">❤️ Añadir a favoritos</button>
+                </div>
+                
+                <div class="book-stats">
+                    <div class="stat">
+                        <span class="stat-number">4.5</span>
+                        <span class="stat-label">⭐ Calificación</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ producto.cantidad }}</span>
+                        <span class="stat-label">� Unidades</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">${{ "%.2f"|format(producto.precio) }}</span>
+                        <span class="stat-label">� Precio</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    {% else %}
+        <div class="error-container">
+            <h1>❌ Libro no encontrado</h1>
+            <p>El libro que buscas no existe en nuestro inventario.</p>
+            <a href="{{ url_for('libros') }}" class="btn">📚 Ver todos los libros</a>
+        </div>
+    {% endif %}
     
-    <div class="related-books">
-        <h3>Libros Relacionados</h3>
-        <div class="related-grid">
-            <div class="related-book">
-                <h4>Libro Relacionado 1</h4>
-                <p>Autor: Juan Pérez</p>
-                <a href="{{ url_for('libro', titulo='Libro Relacionado 1') }}" class="btn-small">Ver detalles</a>
-            </div>
-            <div class="related-book">
-                <h4>Libro Relacionado 2</h4>
-                <p>Autor: María González</p>
-                <a href="{{ url_for('libro', titulo='Libro Relacionado 2') }}" class="btn-small">Ver detalles</a>
-            </div>
-            <div class="related-book">
-                <h4>Libro Relacionado 3</h4>
-                <p>Autor: Carlos Rodríguez</p>
-                <a href="{{ url_for('libro', titulo='Libro Relacionado 3') }}" class="btn-small">Ver detalles</a>
+    {% if producto %}
+        <div class="related-books">
+            <h3>Libros Relacionados</h3>
+            <div class="related-grid">
+                <!-- Aquí se podrían mostrar libros de la misma categoría o autor -->
+                <div class="related-book">
+                    <h4>Explorar más libros</h4>
+                    <p>Descubre otros títulos en nuestra colección</p>
+                    <a href="{{ url_for('libros') }}" class="btn-small">Ver catálogo</a>
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 </div>
 {% endblock %}

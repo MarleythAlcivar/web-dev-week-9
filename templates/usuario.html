@@ -15,9 +15,38 @@
         </div>
     </div>
     
-    <div class="user-dashboard">
+    {% if productos_autor %}
         <div class="dashboard-section">
-            <h3>📚 Mis Libros</h3>
+            <h3>📚 Libros de {{ nombre }}</h3>
+            <div class="user-stats">
+                <div class="stat-card">
+                    <h4>{{ productos_autor|length }}</h4>
+                    <p>Libros disponibles</p>
+                </div>
+                <div class="stat-card">
+                    <h4>{{ productos_autor|selectattr('cantidad')|map(attribute='cantidad')|sum }}</h4>
+                    <p>Total de unidades</p>
+                </div>
+                <div class="stat-card">
+                    <h4>${{ "%.0f"|format(productos_autor|selectattr('precio')|map(attribute='precio')|sum) }}</h4>
+                    <p>Valor total</p>
+                </div>
+            </div>
+            
+            <div class="author-books">
+                {% for producto in productos_autor %}
+                    <div class="book-item">
+                        <h4>{{ producto.nombre }}</h4>
+                        <p>{{ producto.categoria }} - ${{ "%.2f"|format(producto.precio) }}</p>
+                        <p>Stock: {{ producto.cantidad }} unidades</p>
+                        <a href="{{ url_for('libro', id=producto.id) }}" class="btn-small">Ver detalles</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="dashboard-section">
+            <h3>📚 Perfil de Usuario</h3>
             <div class="user-stats">
                 <div class="stat-card">
                     <h4>12</h4>
@@ -32,76 +61,56 @@
                     <p>Libros favoritos</p>
                 </div>
             </div>
-        </div>
-        
-        <div class="dashboard-section">
-            <h3>📖 Leyendo Actualmente</h3>
-            <div class="current-reading">
-                <div class="reading-item">
-                    <h4>Programación en Python</h4>
-                    <p>Progreso: 65%</p>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: 65%"></div>
+            
+            <div class="user-activities">
+                <h3>📖 Actividad Reciente</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <p>Leíste <strong>Programación en Python</strong></p>
+                        <span class="activity-date">Hace 2 días</span>
                     </div>
-                    <a href="{{ url_for('libro', titulo='Programación en Python') }}" class="btn-small">Continuar leyendo</a>
-                </div>
-                <div class="reading-item">
-                    <h4>Cálculo Diferencial</h4>
-                    <p>Progreso: 30%</p>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: 30%"></div>
+                    <div class="activity-item">
+                        <p>Añadiste <strong>Cálculo Diferencial</strong> a favoritos</p>
+                        <span class="activity-date">Hace 5 días</span>
                     </div>
-                    <a href="{{ url_for('libro', titulo='Cálculo Diferencial') }}" class="btn-small">Continuar leyendo</a>
+                    <div class="activity-item">
+                        <p>Comentaste en <strong>Biología Molecular</strong></p>
+                        <span class="activity-date">Hace 1 semana</span>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="dashboard-section">
-            <h3>❤️ Libros Favoritos</h3>
-            <div class="favorites-grid">
-                <div class="favorite-book">
-                    <h4>Biología Molecular</h4>
-                    <p>Carlos Rodríguez</p>
-                    <a href="{{ url_for('libro', titulo='Biología Molecular') }}" class="btn-small">Ver detalles</a>
+    {% endif %}
+    
+    <div class="dashboard-section">
+        <h3>📖 Leyendo Actualmente</h3>
+        <div class="current-reading">
+            <div class="reading-item">
+                <h4>Programación en Python</h4>
+                <p>Progreso: 65%</p>
+                <div class="progress-bar">
+                    <div class="progress" style="width: 65%"></div>
                 </div>
-                <div class="favorite-book">
-                    <h4>Historia del Ecuador</h4>
-                    <p>Ana López</p>
-                    <a href="{{ url_for('libro', titulo='Historia del Ecuador') }}" class="btn-small">Ver detalles</a>
+                <a href="{{ url_for('libros') }}" class="btn-small">Ver catálogo</a>
+            </div>
+            <div class="reading-item">
+                <h4>Cálculo Diferencial</h4>
+                <p>Progreso: 30%</p>
+                <div class="progress-bar">
+                    <div class="progress" style="width: 30%"></div>
                 </div>
-                <div class="favorite-book">
-                    <h4>Ingeniería de Software</h4>
-                    <p>Roberto Martínez</p>
-                    <a href="{{ url_for('libro', titulo='Ingeniería de Software') }}" class="btn-small">Ver detalles</a>
-                </div>
+                <a href="{{ url_for('libros') }}" class="btn-small">Ver catálogo</a>
             </div>
         </div>
-        
-        <div class="dashboard-section">
-            <h3>📊 Actividad Reciente</h3>
-            <div class="activity-list">
-                <div class="activity-item">
-                    <span class="activity-date">Hoy</span>
-                    <span class="activity-desc">Comenzaste a leer "Programación en Python"</span>
-                </div>
-                <div class="activity-item">
-                    <span class="activity-date">Ayer</span>
-                    <span class="activity-desc">Añadiste "Biología Molecular" a favoritos</span>
-                </div>
-                <div class="activity-item">
-                    <span class="activity-date">Hace 3 días</span>
-                    <span class="activity-desc">Finalizaste "Matemáticas Básicas"</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="dashboard-section">
-            <h3>⚙️ Configuración de Cuenta</h3>
-            <div class="account-settings">
-                <button class="btn-small">Editar perfil</button>
-                <button class="btn-small btn-secondary">Cambiar contraseña</button>
-                <button class="btn-small btn-secondary">Preferencias de lectura</button>
-                <button class="btn-small btn-secondary">Notificaciones</button>
+    </div>
+    
+    <div class="dashboard-section">
+        <h3>🎯 Recomendaciones</h3>
+        <div class="recommendations">
+            <div class="recommendation-item">
+                <h4>Basado en tus intereses</h4>
+                <p>Te recomendamos explorar libros de Ciencias Exactas</p>
+                <a href="{{ url_for('libros', categoria='Ciencias Exactas') }}" class="btn-small">Explorar</a>
             </div>
         </div>
     </div>

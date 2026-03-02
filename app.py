@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from models import Inventario, Producto
 
+# Configuración simple para caso educativo
 app = Flask(__name__)
 
 # Inicializar el inventario global
@@ -149,5 +150,80 @@ def api_buscar():
 def api_estadisticas():
     return jsonify(inventario.obtener_estadisticas())
 
+# Rutas de administración para CRUD
+@app.route('/admin')
+def admin():
+    productos = inventario.obtener_todos()
+    stats = inventario.obtener_estadisticas()
+    return render_template('admin.html', productos=productos, stats=stats)
+
+@app.route('/admin/agregar', methods=['POST'])
+def admin_agregar():
+    try:
+        nombre = request.form['nombre']
+        autor = request.form['autor']
+        categoria = request.form['categoria']
+        isbn = request.form.get('isbn', '')
+        cantidad = int(request.form['cantidad'])
+        precio = float(request.form['precio'])
+        
+        producto = inventario.agregar_producto(
+            nombre=nombre,
+            autor=autor,
+            categoria=categoria,
+            isbn=isbn,
+            cantidad=cantidad,
+            precio=precio
+        )
+        
+        return redirect(url_for('admin'))
+        
+    except Exception as e:
+        return f"Error al agregar libro: {e}", 400
+
+@app.route('/admin/editar', methods=['POST'])
+def admin_editar():
+    try:
+        id_producto = int(request.form['id'])
+        
+        # Obtener solo los campos que fueron enviados
+        actualizaciones = {}
+        
+        if request.form.get('nombre'):
+            actualizaciones['nombre'] = request.form['nombre']
+        if request.form.get('autor'):
+            actualizaciones['autor'] = request.form['autor']
+        if request.form.get('categoria'):
+            actualizaciones['categoria'] = request.form['categoria']
+        if request.form.get('isbn'):
+            actualizaciones['isbn'] = request.form['isbn']
+        if request.form.get('cantidad'):
+            actualizaciones['cantidad'] = int(request.form['cantidad'])
+        if request.form.get('precio'):
+            actualizaciones['precio'] = float(request.form['precio'])
+        
+        if inventario.actualizar_producto(id_producto, **actualizaciones):
+            return redirect(url_for('admin'))
+        else:
+            return "No se encontró el libro", 404
+            
+    except Exception as e:
+        return f"Error al editar libro: {e}", 400
+
+@app.route('/admin/eliminar', methods=['POST'])
+def admin_eliminar():
+    try:
+        id_producto = int(request.form['id'])
+        
+        if inventario.eliminar_producto(id_producto):
+            return redirect(url_for('admin'))
+        else:
+            return "No se encontró el libro", 404
+            
+    except Exception as e:
+        return f"Error al eliminar libro: {e}", 400
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    # Configuración simple para caso educativo
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

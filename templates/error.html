@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Error {{ error_code }} - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="error-section">
+    <div class="error-container">
+        <div class="error-icon">
+            {% if error_code == 404 %}
+                <h1>🔍</h1>
+            {% elif error_code == 500 %}
+                <h1>⚠️</h1>
+            {% else %}
+                <h1>❌</h1>
+            {% endif %}
+        </div>
+        
+        <div class="error-info">
+            <h1>Error {{ error_code }}</h1>
+            <p>{{ error_message }}</p>
+            
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn">🏠 Volver al Inicio</a>
+                <a href="{{ url_for('libros') }}" class="btn btn-secondary">📚 Ver Libros</a>
+                {% if error_code == 404 %}
+                    <a href="{{ url_for('admin') }}" class="btn btn-secondary">🔧 Administración</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="error-help">
+        <h3>¿Qué puedes hacer?</h3>
+        <ul>
+            {% if error_code == 404 %}
+                <li>Verifica que la URL esté escrita correctamente</li>
+                <li>Usa el menú de navegación para encontrar lo que buscas</li>
+                <li>Vuelve a la página principal</li>
+            {% elif error_code == 500 %}
+                <li>Recarga la página en unos momentos</li>
+                <li>Si el problema persiste, contacta al administrador</li>
+                <li>Intenta acceder a otra sección del sitio</li>
+            {% else %}
+                <li>Recarga la página</li>
+                <li>Contacta al soporte técnico</li>
+                <li>Vuelve a intentarlo más tarde</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<style>
+.error-section {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 40px;
+    padding: 40px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon h1 {
+    font-size: 80px;
+    margin: 0;
+}
+
+.error-info h1 {
+    font-size: 48px;
+    color: #dc3545;
+    margin: 0 0 20px 0;
+}
+
+.error-info p {
+    font-size: 18px;
+    color: #666;
+    margin: 0 0 30px 0;
+}
+
+.error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-help {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-help h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+.error-help ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error-help li {
+    padding: 8px 0;
+    color: #666;
+    border-bottom: 1px solid #eee;
+}
+
+.error-help li:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .error-container {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .error-icon h1 {
+        font-size: 60px;
+    }
+    
+    .error-info h1 {
+        font-size: 36px;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .error-actions .btn {
+        width: 200px;
+    }
+}
+</style>
+{% endblock %}

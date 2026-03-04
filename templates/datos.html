@@ -5,16 +5,16 @@
 {% block content %}
 <div class="container">
     <div class="form-container">
-        <h1>🗂️ Gestión de Persistencia de Datos</h1>
-        <p>Administra los datos del inventario en diferentes formatos de almacenamiento.</p>
+        <h1>🗂️ Gestión de Datos</h1>
+        <p>Administra la persistencia de datos en diferentes formatos: TXT, JSON, CSV y SQLite.</p>
     </div>
 
-    <!-- Tabs para diferentes formatos -->
+    <!-- Tabs de navegación -->
     <div class="tabs">
-        <button class="tab active" onclick="showTab('txt')">📄 Archivos TXT</button>
-        <button class="tab" onclick="showTab('json')">📋 Archivos JSON</button>
-        <button class="tab" onclick="showTab('csv')">📊 Archivos CSV</button>
-        <button class="tab" onclick="showTab('sqlite')">🗃️ Base de Datos SQLite</button>
+        <button class="tab active" onclick="showTab('txt')">📄 TXT</button>
+        <button class="tab" onclick="showTab('json')">📋 JSON</button>
+        <button class="tab" onclick="showTab('csv')">📊 CSV</button>
+        <button class="tab" onclick="showTab('sqlite')">🗃️ SQLite</button>
     </div>
 
     <!-- Tab: Archivos TXT -->
@@ -45,10 +45,13 @@
                     <span id="txt-modified">{{ file_info.txt.modified or 'N/A' }}</span>
                 </div>
             </div>
-
+            
             <div class="data-content">
                 {% if txt_data %}
-                    <h3>📚 Datos Cargados desde TXT:</h3>
+                    <h3>📚 Datos del archivo TXT:</h3>
+                    <div class="alert alert-success">
+                        ✅ Se encontraron {{ txt_data|length }} productos en el archivo TXT.
+                    </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
@@ -59,7 +62,6 @@
                                     <th>Categoría</th>
                                     <th>Cantidad</th>
                                     <th>Precio</th>
-                                    <th>ISBN</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -70,8 +72,7 @@
                                     <td>{{ item.autor }}</td>
                                     <td>{{ item.categoria }}</td>
                                     <td>{{ item.cantidad }}</td>
-                                    <td>${{ item.precio }}</td>
-                                    <td>{{ item.isbn }}</td>
+                                    <td>${{ "%.2f"|format(item.precio) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -79,7 +80,7 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        📝 No hay datos cargados desde archivos TXT. Haz clic en "Cargar desde TXT" para leer los datos.
+                        📝 No hay datos en el archivo TXT. Haz clic en "Guardar en TXT" para exportar los datos del inventario actual.
                     </div>
                 {% endif %}
             </div>
@@ -114,10 +115,13 @@
                     <span id="json-modified">{{ file_info.json.modified or 'N/A' }}</span>
                 </div>
             </div>
-
+            
             <div class="data-content">
                 {% if json_data %}
-                    <h3>📚 Datos Cargados desde JSON:</h3>
+                    <h3>📚 Datos del archivo JSON:</h3>
+                    <div class="alert alert-success">
+                        ✅ Se encontraron {{ json_data|length }} productos en el archivo JSON.
+                    </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
@@ -128,7 +132,6 @@
                                     <th>Categoría</th>
                                     <th>Cantidad</th>
                                     <th>Precio</th>
-                                    <th>ISBN</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -139,8 +142,7 @@
                                     <td>{{ item.autor }}</td>
                                     <td>{{ item.categoria }}</td>
                                     <td>{{ item.cantidad }}</td>
-                                    <td>${{ item.precio }}</td>
-                                    <td>{{ item.isbn }}</td>
+                                    <td>${{ "%.2f"|format(item.precio) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -148,7 +150,7 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        📝 No hay datos cargados desde archivos JSON. Haz clic en "Cargar desde JSON" para leer los datos.
+                        📝 No hay datos en el archivo JSON. Haz clic en "Guardar en JSON" para exportar los datos del inventario actual.
                     </div>
                 {% endif %}
             </div>
@@ -183,10 +185,13 @@
                     <span id="csv-modified">{{ file_info.csv.modified or 'N/A' }}</span>
                 </div>
             </div>
-
+            
             <div class="data-content">
                 {% if csv_data %}
-                    <h3>📚 Datos Cargados desde CSV:</h3>
+                    <h3>📚 Datos del archivo CSV:</h3>
+                    <div class="alert alert-success">
+                        ✅ Se encontraron {{ csv_data|length }} productos en el archivo CSV.
+                    </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
@@ -197,7 +202,6 @@
                                     <th>Categoría</th>
                                     <th>Cantidad</th>
                                     <th>Precio</th>
-                                    <th>ISBN</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -208,8 +212,7 @@
                                     <td>{{ item.autor }}</td>
                                     <td>{{ item.categoria }}</td>
                                     <td>{{ item.cantidad }}</td>
-                                    <td>${{ item.precio }}</td>
-                                    <td>{{ item.isbn }}</td>
+                                    <td>${{ "%.2f"|format(item.precio) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -217,7 +220,7 @@
                     </div>
                 {% else %}
                     <div class="alert alert-info">
-                        📝 No hay datos cargados desde archivos CSV. Haz clic en "Cargar desde CSV" para leer los datos.
+                        📝 No hay datos en el archivo CSV. Haz clic en "Guardar en CSV" para exportar los datos del inventario actual.
                     </div>
                 {% endif %}
             </div>
@@ -228,7 +231,7 @@
     <div id="sqlite" class="tab-content">
         <div class="data-section">
             <div class="data-header">
-                <h2>🗃️ Base de Datos SQLite (SQLAlchemy)</h2>
+                <h2>🗃️ Base de Datos SQLite</h2>
                 <div>
                     <button class="btn" onclick="saveToSqlite()">💾 Guardar en SQLite</button>
                     <button class="btn btn-secondary" onclick="loadFromSqlite()">📂 Cargar desde SQLite</button>
@@ -241,8 +244,6 @@
                     <div class="alert alert-success">
                         ✅ Se encontraron {{ sqlite_data|length }} productos en la base de datos.
                     </div>
-                    <div class="alert alert-success">
-                    </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
@@ -253,7 +254,6 @@
                                     <th>Categoría</th>
                                     <th>Cantidad</th>
                                     <th>Precio</th>
-                                    <th>ISBN</th>
                                     <th>Fecha Creación</th>
                                 </tr>
                             </thead>
@@ -265,8 +265,7 @@
                                     <td>{{ item.autor }}</td>
                                     <td>{{ item.categoria }}</td>
                                     <td>{{ item.cantidad }}</td>
-                                    <td>${{ item.precio }}</td>
-                                    <td>{{ item.isbn }}</td>
+                                    <td>${{ "%.2f"|format(item.precio) }}</td>
                                     <td>{{ item.fecha_creacion[:10] if item.fecha_creacion else 'N/A' }}</td>
                                 </tr>
                                 {% endfor %}
@@ -279,6 +278,11 @@
                     </div>
                 {% endif %}
             </div>
+        </div>
+    </div>
+</div>
+
+<script>
 function showTab(tabName) {
     // Ocultar todos los contenidos
     const contents = document.querySelectorAll('.tab-content');
@@ -399,6 +403,120 @@ function loadFromSqlite() {
 </script>
 
 <style>
+/* Estilos para tabs */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #667eea;
+    margin-bottom: 2rem;
+}
+
+.tab {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    font-size: 1rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.tab.active {
+    border-bottom-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    font-weight: 600;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.data-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.data-header h2 {
+    margin: 0;
+    color: #495057;
+}
+
+.data-header div {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.file-info {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.file-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-info-item strong {
+    color: #495057;
+}
+
+.data-content {
+    margin-top: 2rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table th {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+}
+
+.table tr:hover {
+    background: #f8f9fa;
+}
+
 .btn-success {
     background: #28a745;
 }
@@ -413,6 +531,26 @@ function loadFromSqlite() {
 
 .btn-danger:hover {
     background: #c82333;
+}
+
+@media (max-width: 768px) {
+    .data-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .data-header div {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tabs {
+        overflow-x: auto;
+    }
+    
+    .tab {
+        min-width: 120px;
+    }
 }
 </style>
 {% endblock %}

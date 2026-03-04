@@ -49,39 +49,58 @@ class FilePersistence:
     
     def read_from_txt(self) -> List[Dict[str, Any]]:
         """
-        Leer datos desde formato TXT
+        Leer datos desde archivo TXT
         """
         data = []
+        
+        if not os.path.exists(self.txt_file):
+            return data
+        
         try:
-            if not os.path.exists(self.txt_file):
-                return data
-            
             with open(self.txt_file, 'r', encoding='utf-8') as file:
-                lines = file.readlines()
+                content = file.read()
                 
-            current_item = {}
-            for line in lines:
-                line = line.strip()
-                if line.startswith("ID:"):
-                    if current_item:  # Guardar el item anterior si existe
+                # Parsear el contenido del archivo TXT
+                lines = content.strip().split('\n')
+                current_item = {}
+                
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith('===') or line.startswith('---'):
+                        continue
+                    
+                    if ':' in line:
+                        key, value = line.split(':', 1)
+                        key = key.strip()
+                        value = value.strip()
+                        
+                        # Mapear campos y convertir tipos
+                        if key.lower() == 'id':
+                            current_item['id'] = int(value)
+                        elif key.lower() == 'nombre':
+                            current_item['nombre'] = value
+                        elif key.lower() == 'autor':
+                            current_item['autor'] = value
+                        elif key.lower() == 'categoria':
+                            current_item['categoria'] = value
+                        elif key.lower() == 'cantidad':
+                            current_item['cantidad'] = int(value)
+                        elif key.lower() == 'precio':
+                            # Quitar el símbolo $ y convertir a float
+                            price_value = value.replace('$', '').strip()
+                            current_item['precio'] = float(price_value)
+                        elif key.lower() == 'isbn':
+                            current_item['isbn'] = value
+                    
+                    # Si encontramos un separador, guardar el item actual
+                    if line.startswith('---') and current_item:
                         data.append(current_item)
-                    current_item = {'id': line.split(":")[1].strip()}
-                elif line.startswith("Nombre:"):
-                    current_item['nombre'] = line.split(":")[1].strip()
-                elif line.startswith("Autor:"):
-                    current_item['autor'] = line.split(":")[1].strip()
-                elif line.startswith("Categoría:"):
-                    current_item['categoria'] = line.split(":")[1].strip()
-                elif line.startswith("Cantidad:"):
-                    current_item['cantidad'] = line.split(":")[1].strip()
-                elif line.startswith("Precio:"):
-                    current_item['precio'] = line.split(":")[1].strip().replace('$', '')
-                elif line.startswith("ISBN:"):
-                    current_item['isbn'] = line.split(":")[1].strip()
-            
-            if current_item:  # Guardar el último item
-                data.append(current_item)
+                        current_item = {}
                 
+                # Agregar el último item si existe
+                if current_item:
+                    data.append(current_item)
+                    
         except Exception as e:
             print(f"Error al leer desde TXT: {e}")
         

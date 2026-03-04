@@ -187,9 +187,9 @@ class FilePersistence:
         Obtener información sobre los archivos de datos
         """
         info = {
-            'txt': {'exists': False, 'size': 0, 'modified': None},
-            'json': {'exists': False, 'size': 0, 'modified': None},
-            'csv': {'exists': False, 'size': 0, 'modified': None}
+            'txt': {'exists': False, 'size': 0, 'modified': None, 'download_url': '/download/txt'},
+            'json': {'exists': False, 'size': 0, 'modified': None, 'download_url': '/download/json'},
+            'csv': {'exists': False, 'size': 0, 'modified': None, 'download_url': '/download/csv'}
         }
         
         files_info = {
@@ -204,7 +204,30 @@ class FilePersistence:
                 info[format_type] = {
                     'exists': True,
                     'size': stat.st_size,
-                    'modified': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                    'modified': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                    'download_url': f'/download/{format_type}'
                 }
         
         return info
+    
+    def get_file_content(self, format_type: str) -> str:
+        """
+        Obtener el contenido del archivo para descarga
+        """
+        try:
+            if format_type == 'txt':
+                if os.path.exists(self.txt_file):
+                    with open(self.txt_file, 'r', encoding='utf-8') as file:
+                        return file.read()
+            elif format_type == 'json':
+                if os.path.exists(self.json_file):
+                    with open(self.json_file, 'r', encoding='utf-8') as file:
+                        return file.read()
+            elif format_type == 'csv':
+                if os.path.exists(self.csv_file):
+                    with open(self.csv_file, 'r', encoding='utf-8') as file:
+                        return file.read()
+        except Exception as e:
+            print(f"Error leyendo archivo {format_type}: {e}")
+        
+        return ""

@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
+from datetime import datetime
 from models import Inventario, Producto
 from inventario.inventario import FilePersistence
 from inventario.bd import init_db
@@ -413,6 +414,37 @@ def load_from_sqlalchemy():
     except Exception as e:
         print(f"Error cargando desde SQLAlchemy: {e}")
         return []
+
+# Rutas para descarga de archivos
+@app.route('/download/<format>')
+def download_file(format):
+    """Descargar archivo de datos en formato específico"""
+    try:
+        content = file_persistence.get_file_content(format)
+        
+        if not content:
+            return "Archivo no encontrado", 404
+        
+        # Configurar headers para descarga
+        if format == 'txt':
+            filename = f"inventario_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            mimetype = 'text/plain'
+        elif format == 'json':
+            filename = f"inventario_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            mimetype = 'application/json'
+        elif format == 'csv':
+            filename = f"inventario_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            mimetype = 'text/csv'
+        else:
+            return "Formato no soportado", 400
+        
+        from flask import Response
+        response = Response(content, mimetype=mimetype)
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+        
+    except Exception as e:
+        return f"Error al descargar archivo: {e}", 500
 
 if __name__ == '__main__':
     # Configuración simple para caso educativo

@@ -25,6 +25,9 @@
                 <div>
                     <button class="btn" onclick="saveToTxt()">💾 Guardar en TXT</button>
                     <button class="btn btn-secondary" onclick="loadFromTxt()">📂 Cargar desde TXT</button>
+                    {% if file_info.txt.exists %}
+                    <a href="{{ file_info.txt.download_url }}" class="btn btn-success" download>⬇️ Descargar TXT</a>
+                    {% endif %}
                 </div>
             </div>
             
@@ -91,6 +94,9 @@
                 <div>
                     <button class="btn" onclick="saveToJson()">💾 Guardar en JSON</button>
                     <button class="btn btn-secondary" onclick="loadFromJson()">📂 Cargar desde JSON</button>
+                    {% if file_info.json.exists %}
+                    <a href="{{ file_info.json.download_url }}" class="btn btn-success" download>⬇️ Descargar JSON</a>
+                    {% endif %}
                 </div>
             </div>
             
@@ -157,6 +163,9 @@
                 <div>
                     <button class="btn" onclick="saveToCsv()">💾 Guardar en CSV</button>
                     <button class="btn btn-secondary" onclick="loadFromCsv()">📂 Cargar desde CSV</button>
+                    {% if file_info.csv.exists %}
+                    <a href="{{ file_info.csv.download_url }}" class="btn btn-success" download>⬇️ Descargar CSV</a>
+                    {% endif %}
                 </div>
             </div>
             
@@ -232,6 +241,8 @@
                     <div class="alert alert-success">
                         ✅ Se encontraron {{ sqlite_data|length }} productos en la base de datos.
                     </div>
+                    <div class="alert alert-success">
+                    </div>
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
@@ -268,11 +279,6 @@
                     </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-</div>
-
-<script>
 function showTab(tabName) {
     // Ocultar todos los contenidos
     const contents = document.querySelectorAll('.tab-content');
@@ -391,4 +397,22 @@ function loadFromSqlite() {
         });
 }
 </script>
+
+<style>
+.btn-success {
+    background: #28a745;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+</style>
 {% endblock %}

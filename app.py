@@ -15,6 +15,13 @@ app.config['SECRET_KEY'] = 'clave-secreta-educativa'
 inventario = Inventario()
 file_persistence = FilePersistence()
 
+# Inicializar base de datos SQLite al iniciar
+try:
+    init_db()
+    print("Base de datos SQLite inicializada")
+except Exception as e:
+    print(f"Error inicializando base de datos: {e}")
+
 @app.route('/')
 def index():
     # Obtener productos destacados para la página principal

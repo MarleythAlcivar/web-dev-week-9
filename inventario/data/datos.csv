@@ -1,0 +1,5 @@
+id,nombre,autor,categoria,cantidad,precio,isbn
+1,Programación en Python,Juan Pérez,Programación,15,45.99,978-1234567890
+2,Cálculo Diferencial,María González,Matemáticas,10,38.75,978-0987654321
+3,Cien Años de Soledad,Gabriel García Márquez,Literatura,8,25.5,978-1122334455
+4,Física Cuántica,Ana Martínez,Física,5,67.8,978-5566778899

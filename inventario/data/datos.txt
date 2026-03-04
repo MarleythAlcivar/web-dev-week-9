@@ -1,0 +1,36 @@
+=== INVENTARIO DE PRODUCTOS ===
+Fecha de generación: 2026-03-03 20:58:00
+==================================================
+
+ID: 1
+Nombre: Programación en Python
+Autor: Juan Pérez
+Categoría: Programación
+Cantidad: 15
+Precio: $45.99
+ISBN: 978-1234567890
+------------------------------
+ID: 2
+Nombre: Cálculo Diferencial
+Autor: María González
+Categoría: Matemáticas
+Cantidad: 10
+Precio: $38.75
+ISBN: 978-0987654321
+------------------------------
+ID: 3
+Nombre: Cien Años de Soledad
+Autor: Gabriel García Márquez
+Categoría: Literatura
+Cantidad: 8
+Precio: $25.50
+ISBN: 978-1122334455
+------------------------------
+ID: 4
+Nombre: Física Cuántica
+Autor: Ana Martínez
+Categoría: Física
+Cantidad: 5
+Precio: $67.80
+ISBN: 978-5566778899
+------------------------------

@@ -1,12 +1,18 @@
 import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from models import Inventario, Producto
+from inventario.inventario import FilePersistence
+from inventario.bd import init_db, get_db
+from inventario.productos import Producto as ProductoSQLAlchemy
+from sqlalchemy.orm import Session
 
 # Configuración simple para caso educativo
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'clave-secreta-educativa'
 
 # Inicializar el inventario global
 inventario = Inventario()
+file_persistence = FilePersistence()
 
 @app.route('/')
 def index():
@@ -222,6 +228,191 @@ def admin_eliminar():
             
     except Exception as e:
         return f"Error al eliminar libro: {e}", 400
+            
+# Rutas para formularios y productos
+@app.route('/productos')
+def productos():
+    """Página de gestión de productos"""
+    productos = inventario.obtener_todos()
+    stats = inventario.obtener_estadisticas()
+    return render_template('productos.html', productos=productos, stats=stats)
+
+@app.route('/producto/nuevo')
+def producto_nuevo():
+    """Formulario para nuevo producto"""
+    from form import ProductoForm
+    form = ProductoForm()
+    return render_template('producto_form.html', form=form)
+
+@app.route('/producto/agregar', methods=['POST'])
+def agregar_producto():
+    """Agregar un nuevo producto"""
+    try:
+        nombre = request.form['nombre']
+        autor = request.form['autor']
+        categoria = request.form.get('categoria', '')
+        isbn = request.form.get('isbn', '')
+        cantidad = int(request.form['cantidad'])
+        precio = float(request.form['precio'])
+        
+        producto = inventario.agregar_producto(
+            nombre=nombre,
+            autor=autor,
+            categoria=categoria,
+            isbn=isbn,
+            cantidad=cantidad,
+            precio=precio
+        )
+        
+        return redirect(url_for('productos'))
+        
+    except Exception as e:
+        return f"Error al agregar producto: {e}", 400
+
+@app.route('/contactos')
+def contactos():
+    """Página de contactos"""
+    return render_template('contactos.html')
+
+# Rutas para persistencia de datos
+@app.route('/datos')
+def datos():
+    """Página principal de gestión de datos"""
+    file_info = file_persistence.get_file_info()
+    
+    # Cargar datos desde diferentes formatos
+    txt_data = file_persistence.read_from_txt()
+    json_data = file_persistence.read_from_json()
+    csv_data = file_persistence.read_from_csv()
+    
+    # Cargar datos desde SQLite
+    sqlite_data = []
+    try:
+        with Session(app.config.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///inventario_sqlalchemy.db').bind) as session:
+            sqlite_data = [producto.to_dict() for producto in session.query(ProductoSQLAlchemy).all()]
+    except Exception as e:
+        print(f"Error cargando desde SQLite: {e}")
+    
+    return render_template('datos.html', 
+                         file_info=file_info,
+                         txt_data=txt_data,
+                         json_data=json_data,
+                         csv_data=csv_data,
+                         sqlite_data=sqlite_data)
+
+@app.route('/datos/save/<format>', methods=['POST'])
+def save_data(format):
+    """Guardar datos en diferentes formatos"""
+    try:
+        # Obtener datos del inventario actual
+        productos = inventario.obtener_todos()
+        data = [producto.a_diccionario() for producto in productos]
+        
+        success = False
+        if format == 'txt':
+            success = file_persistence.save_to_txt(data)
+        elif format == 'json':
+            success = file_persistence.save_to_json(data)
+        elif format == 'csv':
+            success = file_persistence.save_to_csv(data)
+        elif format == 'sqlite':
+            success = save_to_sqlalchemy(data)
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Datos guardados en {format.upper()}'})
+        else:
+            return jsonify({'success': False, 'error': f'Error al guardar en {format.upper()}'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/datos/load/<format>', methods=['GET', 'POST'])
+def load_data(format):
+    """Cargar datos desde diferentes formatos"""
+    try:
+        data = []
+        
+        if format == 'txt':
+            data = file_persistence.read_from_txt()
+        elif format == 'json':
+            data = file_persistence.read_from_json()
+        elif format == 'csv':
+            data = file_persistence.read_from_csv()
+        elif format == 'sqlite':
+            data = load_from_sqlalchemy()
+        
+        # Importar datos al inventario
+        imported_count = 0
+        for item in data:
+            try:
+                inventario.agregar_producto(
+                    nombre=item.get('nombre', 'Sin nombre'),
+                    cantidad=int(item.get('cantidad', 0)),
+                    precio=float(item.get('precio', 0)),
+                    autor=item.get('autor', 'Sin autor'),
+                    categoria=item.get('categoria', 'Sin categoría'),
+                    isbn=item.get('isbn', '')
+                )
+                imported_count += 1
+            except Exception as e:
+                print(f"Error importando item {item}: {e}")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Se importaron {imported_count} productos desde {format.upper()}'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+def save_to_sqlalchemy(data):
+    """Guardar datos en SQLite usando SQLAlchemy"""
+    try:
+        # Inicializar la base de datos
+        from inventario.bd import engine
+        from inventario.productos import Producto as ProductoSQLAlchemy
+        from sqlalchemy.orm import Session
+        
+        # Crear tablas si no existen
+        from inventario.bd import Base
+        Base.metadata.create_all(bind=engine)
+        
+        with Session(engine) as session:
+            # Limpiar datos existentes (opcional)
+            session.query(ProductoSQLAlchemy).delete()
+            
+            # Insertar nuevos datos
+            for item in data:
+                producto = ProductoSQLAlchemy(
+                    nombre=item.get('nombre'),
+                    autor=item.get('autor'),
+                    categoria=item.get('categoria'),
+                    isbn=item.get('isbn'),
+                    cantidad=item.get('cantidad', 0),
+                    precio=item.get('precio', 0.0)
+                )
+                session.add(producto)
+            
+            session.commit()
+        
+        return True
+    except Exception as e:
+        print(f"Error guardando en SQLAlchemy: {e}")
+        return False
+
+def load_from_sqlalchemy():
+    """Cargar datos desde SQLite usando SQLAlchemy"""
+    try:
+        from inventario.bd import engine
+        from inventario.productos import Producto as ProductoSQLAlchemy
+        from sqlalchemy.orm import Session
+        
+        with Session(engine) as session:
+            productos = session.query(ProductoSQLAlchemy).all()
+            return [producto.to_dict() for producto in productos]
+    except Exception as e:
+        print(f"Error cargando desde SQLAlchemy: {e}")
+        return []
 
 if __name__ == '__main__':
     # Configuración simple para caso educativo

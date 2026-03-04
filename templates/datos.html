@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Datos - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>🗂️ Gestión de Persistencia de Datos</h1>
+        <p>Administra los datos del inventario en diferentes formatos de almacenamiento.</p>
+    </div>
+
+    <!-- Tabs para diferentes formatos -->
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('txt')">📄 Archivos TXT</button>
+        <button class="tab" onclick="showTab('json')">📋 Archivos JSON</button>
+        <button class="tab" onclick="showTab('csv')">📊 Archivos CSV</button>
+        <button class="tab" onclick="showTab('sqlite')">🗃️ Base de Datos SQLite</button>
+    </div>
+
+    <!-- Tab: Archivos TXT -->
+    <div id="txt" class="tab-content active">
+        <div class="data-section">
+            <div class="data-header">
+                <h2>📄 Archivos de Texto (TXT)</h2>
+                <div>
+                    <button class="btn" onclick="saveToTxt()">💾 Guardar en TXT</button>
+                    <button class="btn btn-secondary" onclick="loadFromTxt()">📂 Cargar desde TXT</button>
+                </div>
+            </div>
+            
+            <div class="file-info">
+                <div class="file-info-item">
+                    <strong>Estado del archivo:</strong>
+                    <span id="txt-exists">{{ '✅ Existe' if file_info.txt.exists else '❌ No existe' }}</span>
+                </div>
+                <div class="file-info-item">
+                    <strong>Tamaño:</strong>
+                    <span id="txt-size">{{ file_info.txt.size }} bytes</span>
+                </div>
+                <div class="file-info-item">
+                    <strong>Última modificación:</strong>
+                    <span id="txt-modified">{{ file_info.txt.modified or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="data-content">
+                {% if txt_data %}
+                    <h3>📚 Datos Cargados desde TXT:</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Autor</th>
+                                    <th>Categoría</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>ISBN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in txt_data %}
+                                <tr>
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.nombre }}</td>
+                                    <td>{{ item.autor }}</td>
+                                    <td>{{ item.categoria }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td>${{ item.precio }}</td>
+                                    <td>{{ item.isbn }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        📝 No hay datos cargados desde archivos TXT. Haz clic en "Cargar desde TXT" para leer los datos.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Archivos JSON -->
+    <div id="json" class="tab-content">
+        <div class="data-section">
+            <div class="data-header">
+                <h2>📋 Archivos JSON</h2>
+                <div>
+                    <button class="btn" onclick="saveToJson()">💾 Guardar en JSON</button>
+                    <button class="btn btn-secondary" onclick="loadFromJson()">📂 Cargar desde JSON</button>
+                </div>
+            </div>
+            
+            <div class="file-info">
+                <div class="file-info-item">
+                    <strong>Estado del archivo:</strong>
+                    <span id="json-exists">{{ '✅ Existe' if file_info.json.exists else '❌ No existe' }}</span>
+                </div>
+                <div class="file-info-item">
+                    <strong>Tamaño:</strong>
+                    <span id="json-size">{{ file_info.json.size }} bytes</span>
+                </div>
+                <div class="file-info-item">
+                    <strong>Última modificación:</strong>
+                    <span id="json-modified">{{ file_info.json.modified or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="data-content">
+                {% if json_data %}
+                    <h3>📚 Datos Cargados desde JSON:</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Autor</th>
+                                    <th>Categoría</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>ISBN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in json_data %}
+                                <tr>
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.nombre }}</td>
+                                    <td>{{ item.autor }}</td>
+                                    <td>{{ item.categoria }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td>${{ item.precio }}</td>
+                                    <td>{{ item.isbn }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        📝 No hay datos cargados desde archivos JSON. Haz clic en "Cargar desde JSON" para leer los datos.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Archivos CSV -->
+    <div id="csv" class="tab-content">
+        <div class="data-section">
+            <div class="data-header">
+                <h2>📊 Archivos CSV</h2>
+                <div>
+                    <button class="btn" onclick="saveToCsv()">💾 Guardar en CSV</button>
+                    <button class="btn btn-secondary" onclick="loadFromCsv()">📂 Cargar desde CSV</button>
+                </div>
+            </div>
+            
+            <div class="file-info">
+                <div class="file-info-item">
+                    <strong>Estado del archivo:</strong>
+                    <span id="csv-exists">{{ '✅ Existe' if file_info.csv.exists else '❌ No existe' }}</span>
+                </div>
+                <div class="file-info-item">
+                    <strong>Tamaño:</strong>
+                    <span id="csv-size">{{ file_info.csv.size }} bytes</span>
+                </div>
+                <div class="file-info-item">
+                    <strong>Última modificación:</strong>
+                    <span id="csv-modified">{{ file_info.csv.modified or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="data-content">
+                {% if csv_data %}
+                    <h3>📚 Datos Cargados desde CSV:</h3>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Autor</th>
+                                    <th>Categoría</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>ISBN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in csv_data %}
+                                <tr>
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.nombre }}</td>
+                                    <td>{{ item.autor }}</td>
+                                    <td>{{ item.categoria }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td>${{ item.precio }}</td>
+                                    <td>{{ item.isbn }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        📝 No hay datos cargados desde archivos CSV. Haz clic en "Cargar desde CSV" para leer los datos.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Base de Datos SQLite -->
+    <div id="sqlite" class="tab-content">
+        <div class="data-section">
+            <div class="data-header">
+                <h2>🗃️ Base de Datos SQLite (SQLAlchemy)</h2>
+                <div>
+                    <button class="btn" onclick="saveToSqlite()">💾 Guardar en SQLite</button>
+                    <button class="btn btn-secondary" onclick="loadFromSqlite()">📂 Cargar desde SQLite</button>
+                </div>
+            </div>
+
+            <div class="data-content">
+                {% if sqlite_data %}
+                    <h3>📚 Datos de la Base de Datos SQLite:</h3>
+                    <div class="alert alert-success">
+                        ✅ Se encontraron {{ sqlite_data|length }} productos en la base de datos.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Autor</th>
+                                    <th>Categoría</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>ISBN</th>
+                                    <th>Fecha Creación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sqlite_data %}
+                                <tr>
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.nombre }}</td>
+                                    <td>{{ item.autor }}</td>
+                                    <td>{{ item.categoria }}</td>
+                                    <td>{{ item.cantidad }}</td>
+                                    <td>${{ item.precio }}</td>
+                                    <td>{{ item.isbn }}</td>
+                                    <td>{{ item.fecha_creacion[:10] if item.fecha_creacion else 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        📝 No hay datos en la base de datos SQLite. Haz clic en "Guardar en SQLite" para migrar los datos del inventario actual.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Ocultar todos los contenidos
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => content.classList.remove('active'));
+    
+    // Remover clase active de todos los tabs
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    
+    // Mostrar el tab seleccionado
+    document.getElementById(tabName).classList.add('active');
+    event.target.classList.add('active');
+}
+
+function saveToTxt() {
+    fetch('/datos/save/txt', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos guardados exitosamente en TXT');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function loadFromTxt() {
+    fetch('/datos/load/txt')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos cargados exitosamente desde TXT');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function saveToJson() {
+    fetch('/datos/save/json', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos guardados exitosamente en JSON');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function loadFromJson() {
+    fetch('/datos/load/json')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos cargados exitosamente desde JSON');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function saveToCsv() {
+    fetch('/datos/save/csv', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos guardados exitosamente en CSV');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function loadFromCsv() {
+    fetch('/datos/load/csv')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos cargados exitosamente desde CSV');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function saveToSqlite() {
+    fetch('/datos/save/sqlite', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos guardados exitosamente en SQLite');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+
+function loadFromSqlite() {
+    fetch('/datos/load/sqlite')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Datos cargados exitosamente desde SQLite');
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        });
+}
+</script>
+{% endblock %}

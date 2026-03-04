@@ -49,3 +49,9 @@ instance/
 
 # Render
 .render/
+
+# Base de datos SQLAlchemy (excluir solo la nueva)
+inventario_sqlalchemy.db
+
+# Archivos de datos generados (mantener los de ejemplo)
+# inventario/data/ - Mantener para que los archivos se suban al repo

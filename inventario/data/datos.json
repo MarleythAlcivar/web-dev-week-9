@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "total_productos": 4,
+    "fecha_generacion": "2026-03-03T20:58:00",
+    "version": "1.0"
+  },
+  "productos": [
+    {
+      "id": 1,
+      "nombre": "Programación en Python",
+      "autor": "Juan Pérez",
+      "categoria": "Programación",
+      "cantidad": 15,
+      "precio": 45.99,
+      "isbn": "978-1234567890"
+    },
+    {
+      "id": 2,
+      "nombre": "Cálculo Diferencial",
+      "autor": "María González",
+      "categoria": "Matemáticas",
+      "cantidad": 10,
+      "precio": 38.75,
+      "isbn": "978-0987654321"
+    },
+    {
+      "id": 3,
+      "nombre": "Cien Años de Soledad",
+      "autor": "Gabriel García Márquez",
+      "categoria": "Literatura",
+      "cantidad": 8,
+      "precio": 25.5,
+      "isbn": "978-1122334455"
+    },
+    {
+      "id": 4,
+      "nombre": "Física Cuántica",
+      "autor": "Ana Martínez",
+      "categoria": "Física",
+      "cantidad": 5,
+      "precio": 67.8,
+      "isbn": "978-5566778899"
+    }
+  ]
+}

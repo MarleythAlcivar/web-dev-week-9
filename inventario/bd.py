@@ -3,14 +3,13 @@ Configuración de base de datos con SQLAlchemy
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Configuración de la base de datos SQLite
 DATABASE_URL = "sqlite:///inventario_sqlalchemy.db"
 
 # Crear el motor de la base de datos
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=False)
 
 # Crear la clase base para los modelos
 Base = declarative_base()

@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from models import Inventario, Producto
 from inventario.inventario import FilePersistence
-from inventario.bd import init_db, get_db
+from inventario.bd import init_db
 from inventario.productos import Producto as ProductoSQLAlchemy
 from sqlalchemy.orm import Session
 
@@ -288,7 +288,8 @@ def datos():
     # Cargar datos desde SQLite
     sqlite_data = []
     try:
-        with Session(app.config.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///inventario_sqlalchemy.db').bind) as session:
+        from inventario.bd import engine
+        with Session(engine) as session:
             sqlite_data = [producto.to_dict() for producto in session.query(ProductoSQLAlchemy).all()]
     except Exception as e:
         print(f"Error cargando desde SQLite: {e}")
@@ -369,12 +370,11 @@ def save_to_sqlalchemy(data):
     """Guardar datos en SQLite usando SQLAlchemy"""
     try:
         # Inicializar la base de datos
-        from inventario.bd import engine
+        from inventario.bd import engine, Base
         from inventario.productos import Producto as ProductoSQLAlchemy
         from sqlalchemy.orm import Session
         
         # Crear tablas si no existen
-        from inventario.bd import Base
         Base.metadata.create_all(bind=engine)
         
         with Session(engine) as session:

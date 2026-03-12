@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Estado MySQL - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>🗄️ Estado de la Base de Datos MySQL</h1>
+        <p>Configuración y estado de la conexión con MySQL.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Estado de la Configuración</h2>
+                </div>
+                
+                <div class="card-content">
+                    {% if success %}
+                        <div class="alert alert-success">
+                            ✅ {{ message }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-danger">
+                            ❌ {{ message }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="info-section">
+                        <h3>🔧 Pasos para Configurar MySQL</h3>
+                        <ol>
+                            <li><strong>Instalar MySQL Server</strong> en tu sistema</li>
+                            <li><strong>Crear base de datos</strong> llamada <code>biblioteca</code></li>
+                            <li><strong>Configurar usuario</strong> con permisos adecuados</li>
+                            <li><strong>Copiar .env.example</strong> a <code>.env</code> y ajustar valores</li>
+                            <li><strong>Ejecutar este script</strong> para crear tablas</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>📋 Comandos MySQL</h3>
+                        <div class="code-block">
+                            <pre><code>-- Crear base de datos
+CREATE DATABASE biblioteca;
+
+-- Crear usuario (opcional)
+CREATE USER 'biblioteca_user'@'localhost' IDENTIFIED BY 'tu_password';
+GRANT ALL PRIVILEGES ON biblioteca.* TO 'biblioteca_user'@'localhost';
+FLUSH PRIVILEGES;</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>⚙️ Configuración de .env</h3>
+                        <div class="code-block">
+                            <pre><code>MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=tu_contraseña
+MYSQL_DATABASE=biblioteca
+MYSQL_PORT=3306</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔗 Acciones Rápidas</h2>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="{{ url_for('mysql_setup') }}" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">
+                        🔄 Reconfigurar MySQL
+                    </a>
+                    <a href="{{ url_for('mysql_usuarios') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        👥 Gestionar Usuarios
+                    </a>
+                    <a href="{{ url_for('mysql_productos') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        📚 Gestionar Productos
+                    </a>
+                    <a href="{{ url_for('mysql_prestamos') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        📋 Gestionar Préstamos
+                    </a>
+                    <a href="{{ url_for('datos') }}" class="btn btn-secondary" style="width: 100%;">
+                        🗂️ Gestión de Datos
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>📖 Documentación</h2>
+                </div>
+                
+                <div class="doc-links">
+                    <h3>📚 Recursos Útiles</h3>
+                    <ul>
+                        <li><a href="#" target="_blank">📘 Manual de MySQL</a></li>
+                        <li><a href="#" target="_blank">🐍 Python MySQL Connector</a></li>
+                        <li><a href="#" target="_blank">🌐 Flask con MySQL</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.col-md-8 {
+    flex: 2;
+}
+
+.col-md-4 {
+    flex: 1;
+}
+
+.info-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #667eea;
+}
+
+.info-section h3 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+}
+
+.info-section ol, .info-section ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.info-section li {
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+
+.code-block {
+    background: #282c34;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.code-block pre {
+    margin: 0;
+    padding: 1rem;
+    color: #abb2bf;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+.code-block code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.doc-links ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.doc-links li {
+    margin-bottom: 0.5rem;
+}
+
+.doc-links a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.doc-links a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+    
+    .col-md-8,
+    .col-md-4 {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}

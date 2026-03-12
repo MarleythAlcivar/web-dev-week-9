@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios MySQL - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>👥 Gestión de Usuarios (MySQL)</h1>
+        <p>Administra los usuarios del sistema en la base de datos MySQL.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Lista de Usuarios</h2>
+                    <div>
+                        <a href="{{ url_for('mysql_usuario_nuevo') }}" class="btn">➕ Nuevo Usuario</a>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Fecha Registro</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                            <tr>
+                                <td>{{ usuario.id_usuario }}</td>
+                                <td>{{ usuario.nombre }}</td>
+                                <td>{{ usuario.mail }}</td>
+                                <td>{{ usuario.fecha_registro.strftime('%d/%m/%Y') if usuario.fecha_registro else 'N/A' }}</td>
+                                <td>
+                                    {% if usuario.activo %}
+                                        <span class="badge badge-success">✅ Activo</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">❌ Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('mysql_usuario_editar', id_usuario=usuario.id_usuario) }}" class="btn btn-sm btn-primary">✏️ Editar</a>
+                                    <a href="{{ url_for('mysql_usuario_eliminar', id_usuario=usuario.id_usuario) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de eliminar este usuario?')">🗑️ Eliminar</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">
+                                    <p>📝 No hay usuarios registrados.</p>
+                                    <a href="{{ url_for('mysql_usuario_nuevo') }}" class="btn">➕ Crear Primer Usuario</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Estadísticas</h2>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <h3>{{ usuarios|length }}</h3>
+                        <p>Total de Usuarios</p>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h3>{{ usuarios|selectattr('activo')|list|length }}</h3>
+                        <p>Usuarios Activos</p>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h3>{{ usuarios|rejectattr('activo')|list|length }}</h3>
+                        <p>Usuarios Inactivos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔗 Acciones Rápidas</h2>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="{{ url_for('mysql_usuario_nuevo') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        ➕ Nuevo Usuario
+                    </a>
+                    <a href="{{ url_for('mysql_productos') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        📚 Ver Productos
+                    </a>
+                    <a href="{{ url_for('mysql_prestamos') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        📋 Ver Préstamos
+                    </a>
+                    <a href="{{ url_for('mysql_setup') }}" class="btn btn-secondary" style="width: 100%;">
+                        🔄 Reconfigurar MySQL
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.col-md-8 {
+    flex: 2;
+}
+
+.col-md-4 {
+    flex: 1;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #495057;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table th {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+}
+
+.table tr:hover {
+    background: #f8f9fa;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+}
+
+.badge-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #667eea;
+}
+
+.stat-item h3 {
+    margin: 0;
+    font-size: 2rem;
+    color: #667eea;
+}
+
+.stat-item p {
+    margin: 0.5rem 0 0 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.5rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+    
+    .col-md-8,
+    .col-md-4 {
+        flex: 1;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}

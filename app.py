@@ -1,11 +1,13 @@
 import os
-from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, flash
 from datetime import datetime
 from models import Inventario, Producto
 from inventario.inventario import FilePersistence
 from inventario.bd import init_db
 from inventario.productos import Producto as ProductoSQLAlchemy
 from sqlalchemy.orm import Session
+from conexion.conexion import get_db_connection
+from conexion.models import Usuario, ProductoMySQL, Categoria, Prestamo
 
 # Configuración simple para caso educativo
 app = Flask(__name__)
@@ -21,6 +23,14 @@ try:
     print("Base de datos SQLite inicializada")
 except Exception as e:
     print(f"Error inicializando base de datos: {e}")
+
+# Inicializar conexión MySQL
+try:
+    db_mysql = get_db_connection()
+    print("Conexión MySQL establecida")
+except Exception as e:
+    print(f"Error conectando a MySQL: {e}")
+    print("Asegúrate de tener MySQL instalado y configurado")
 
 @app.route('/')
 def index():
@@ -445,13 +455,235 @@ def download_file(format):
         else:
             return "Formato no soportado", 400
         
-        from flask import Response
         response = Response(content, mimetype=mimetype)
         response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
         
     except Exception as e:
         return f"Error al descargar archivo: {e}", 500
+
+# Rutas para MySQL
+@app.route('/mysql/setup')
+def mysql_setup():
+    """Configurar base de datos MySQL"""
+    try:
+        db = get_db_connection()
+        tables_created = db.create_tables()
+        
+        if len(tables_created) > 0:
+            db.insert_sample_data()
+            message = f"✅ Base de datos MySQL configurada exitosamente. Tablas creadas: {', '.join(tables_created)}"
+        else:
+            message = "❌ Error al crear tablas en MySQL"
+            
+        return render_template('mysql_status.html', message=message, success=len(tables_created) > 0)
+        
+    except Exception as e:
+        return render_template('mysql_status.html', message=f"❌ Error configurando MySQL: {e}", success=False)
+
+@app.route('/mysql/usuarios')
+def mysql_usuarios():
+    """Gestión de usuarios en MySQL"""
+    try:
+        usuarios = Usuario.get_all()
+        return render_template('mysql_usuarios.html', usuarios=usuarios)
+    except Exception as e:
+        return f"Error cargando usuarios: {e}", 500
+
+@app.route('/mysql/usuarios/nuevo', methods=['GET', 'POST'])
+def mysql_usuario_nuevo():
+    """Crear nuevo usuario en MySQL"""
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre']
+            mail = request.form['mail']
+            password = request.form['password']
+            
+            usuario = Usuario(nombre=nombre, mail=mail, password=password)
+            
+            if usuario.create():
+                flash('✅ Usuario creado exitosamente', 'success')
+                return redirect(url_for('mysql_usuarios'))
+            else:
+                flash('❌ Error al crear usuario', 'error')
+                
+        except Exception as e:
+            flash(f'❌ Error: {e}', 'error')
+    
+    return render_template('mysql_usuario_form.html', action='Crear')
+
+@app.route('/mysql/usuarios/editar/<int:id_usuario>', methods=['GET', 'POST'])
+def mysql_usuario_editar(id_usuario):
+    """Editar usuario en MySQL"""
+    usuario = Usuario.get_by_id(id_usuario)
+    
+    if not usuario:
+        flash('❌ Usuario no encontrado', 'error')
+        return redirect(url_for('mysql_usuarios'))
+    
+    if request.method == 'POST':
+        try:
+            usuario.nombre = request.form['nombre']
+            usuario.mail = request.form['mail']
+            usuario.activo = 'activo' in request.form
+            
+            if usuario.update():
+                flash('✅ Usuario actualizado exitosamente', 'success')
+                return redirect(url_for('mysql_usuarios'))
+            else:
+                flash('❌ Error al actualizar usuario', 'error')
+                
+        except Exception as e:
+            flash(f'❌ Error: {e}', 'error')
+    
+    return render_template('mysql_usuario_form.html', usuario=usuario, action='Editar')
+
+@app.route('/mysql/usuarios/eliminar/<int:id_usuario>')
+def mysql_usuario_eliminar(id_usuario):
+    """Eliminar usuario en MySQL"""
+    try:
+        usuario = Usuario.get_by_id(id_usuario)
+        
+        if usuario and usuario.delete():
+            flash('✅ Usuario eliminado exitosamente', 'success')
+        else:
+            flash('❌ Error al eliminar usuario', 'error')
+            
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'error')
+    
+    return redirect(url_for('mysql_usuarios'))
+
+@app.route('/mysql/productos')
+def mysql_productos():
+    """Gestión de productos en MySQL"""
+    try:
+        productos = ProductoMySQL.get_all()
+        categorias = Categoria.get_all()
+        return render_template('mysql_productos.html', productos=productos, categorias=categorias)
+    except Exception as e:
+        return f"Error cargando productos: {e}", 500
+
+@app.route('/mysql/productos/nuevo', methods=['GET', 'POST'])
+def mysql_producto_nuevo():
+    """Crear nuevo producto en MySQL"""
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre']
+            autor = request.form['autor']
+            categoria = request.form['categoria']
+            isbn = request.form['isbn']
+            cantidad = int(request.form['cantidad'])
+            precio = float(request.form['precio'])
+            
+            producto = ProductoMySQL(
+                nombre=nombre, autor=autor, categoria=categoria,
+                isbn=isbn, cantidad=cantidad, precio=precio
+            )
+            
+            if producto.create():
+                flash('✅ Producto creado exitosamente', 'success')
+                return redirect(url_for('mysql_productos'))
+            else:
+                flash('❌ Error al crear producto', 'error')
+                
+        except Exception as e:
+            flash(f'❌ Error: {e}', 'error')
+    
+    categorias = Categoria.get_all()
+    return render_template('mysql_producto_form.html', categorias=categorias, action='Crear')
+
+@app.route('/mysql/productos/editar/<int:id_producto>', methods=['GET', 'POST'])
+def mysql_producto_editar(id_producto):
+    """Editar producto en MySQL"""
+    producto = ProductoMySQL.get_by_id(id_producto)
+    
+    if not producto:
+        flash('❌ Producto no encontrado', 'error')
+        return redirect(url_for('mysql_productos'))
+    
+    if request.method == 'POST':
+        try:
+            producto.nombre = request.form['nombre']
+            producto.autor = request.form['autor']
+            producto.categoria = request.form['categoria']
+            producto.isbn = request.form['isbn']
+            producto.cantidad = int(request.form['cantidad'])
+            producto.precio = float(request.form['precio'])
+            
+            if producto.update():
+                flash('✅ Producto actualizado exitosamente', 'success')
+                return redirect(url_for('mysql_productos'))
+            else:
+                flash('❌ Error al actualizar producto', 'error')
+                
+        except Exception as e:
+            flash(f'❌ Error: {e}', 'error')
+    
+    categorias = Categoria.get_all()
+    return render_template('mysql_producto_form.html', producto=producto, categorias=categorias, action='Editar')
+
+@app.route('/mysql/productos/eliminar/<int:id_producto>')
+def mysql_producto_eliminar(id_producto):
+    """Eliminar producto en MySQL"""
+    try:
+        producto = ProductoMySQL.get_by_id(id_producto)
+        
+        if producto and producto.delete():
+            flash('✅ Producto eliminado exitosamente', 'success')
+        else:
+            flash('❌ Error al eliminar producto', 'error')
+            
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'error')
+    
+    return redirect(url_for('mysql_productos'))
+
+@app.route('/mysql/prestamos')
+def mysql_prestamos():
+    """Gestión de préstamos en MySQL"""
+    try:
+        prestamos = Prestamo.get_activos()
+        usuarios = Usuario.get_all()
+        productos = ProductoMySQL.get_all()
+        return render_template('mysql_prestamos.html', prestamos=prestamos, usuarios=usuarios, productos=productos)
+    except Exception as e:
+        return f"Error cargando préstamos: {e}", 500
+
+@app.route('/mysql/prestamos/nuevo', methods=['POST'])
+def mysql_prestamo_nuevo():
+    """Crear nuevo préstamo en MySQL"""
+    try:
+        id_usuario = int(request.form['id_usuario'])
+        id_producto = int(request.form['id_producto'])
+        
+        prestamo = Prestamo(id_usuario=id_usuario, id_producto=id_producto)
+        
+        if prestamo.create():
+            flash('✅ Préstamo creado exitosamente', 'success')
+        else:
+            flash('❌ Error al crear préstamo', 'error')
+            
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'error')
+    
+    return redirect(url_for('mysql_prestamos'))
+
+@app.route('/mysql/prestamos/devolver/<int:id_prestamo>')
+def mysql_prestamo_devolver(id_prestamo):
+    """Devolver producto en MySQL"""
+    try:
+        prestamo = Prestamo(id_prestamo=id_prestamo)
+        
+        if prestamo.devolver():
+            flash('✅ Préstamo devuelto exitosamente', 'success')
+        else:
+            flash('❌ Error al devolver préstamo', 'error')
+            
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'error')
+    
+    return redirect(url_for('mysql_prestamos'))
 
 if __name__ == '__main__':
     # Configuración simple para caso educativo

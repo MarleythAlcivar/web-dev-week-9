@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Préstamos MySQL - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>📋 Gestión de Préstamos (MySQL)</h1>
+        <p>Administra los préstamos de productos del sistema MySQL.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Préstamos Activos</h2>
+                    <div>
+                        <button class="btn" onclick="showForm()">➕ Nuevo Préstamo</button>
+                    </div>
+                </div>
+                
+                <!-- Formulario para nuevo préstamo -->
+                <div id="prestamo-form" class="prestamo-form" style="display: none;">
+                    <div class="form-content">
+                        <h3>➕ Crear Nuevo Préstamo</h3>
+                        <form method="POST" action="{{ url_for('mysql_prestamo_nuevo') }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_usuario">Usuario *</label>
+                                        <select id="id_usuario" name="id_usuario" class="form-control" required>
+                                            <option value="">Seleccionar usuario...</option>
+                                            {% for usuario in usuarios %}
+                                            <option value="{{ usuario.id_usuario }}">{{ usuario.nombre }} ({{ usuario.mail }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="id_producto">Producto *</label>
+                                        <select id="id_producto" name="id_producto" class="form-control" required>
+                                            <option value="">Seleccionar producto...</option>
+                                            {% for producto in productos %}
+                                            <option value="{{ producto.id_producto }}">{{ producto.nombre }} - {{ producto.autor }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn">➕ Crear Préstamo</button>
+                                <button type="button" class="btn btn-secondary" onclick="hideForm()">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuario</th>
+                                <th>Producto</th>
+                                <th>Fecha Préstamo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prestamo in prestamos %}
+                            <tr>
+                                <td>{{ prestamo.id_prestamo }}</td>
+                                <td>{{ prestamo.usuario_nombre }}</td>
+                                <td>{{ prestamo.producto_nombre }}</td>
+                                <td>{{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') if prestamo.fecha_prestamo else 'N/A' }}</td>
+                                <td>
+                                    {% if prestamo.estado == 'activo' %}
+                                        <span class="badge badge-success">✅ Activo</span>
+                                    {% elif prestamo.estado == 'devuelto' %}
+                                        <span class="badge badge-primary">📚 Devuelto</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">⚠️ Vencido</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if prestamo.estado == 'activo' %}
+                                    <a href="{{ url_for('mysql_prestamo_devolver', id_prestamo=prestamo.id_prestamo) }}" class="btn btn-sm btn-success">📚 Devolver</a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">
+                                    <p>📝 No hay préstamos activos.</p>
+                                    <button class="btn" onclick="showForm()">➕ Crear Primer Préstamo</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Estadísticas</h2>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <h3>{{ prestamos|length }}</h3>
+                        <p>Préstamos Activos</p>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h3>{{ usuarios|length }}</h3>
+                        <p>Usuarios Registrados</p>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <h3>{{ productos|length }}</h3>
+                        <p>Productos Disponibles</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>📈 Actividad Reciente</h2>
+                </div>
+                
+                <div class="activity-list">
+                    {% for prestamo in prestamos[:5] %}
+                    <div class="activity-item">
+                        <div class="activity-icon">📚</div>
+                        <div class="activity-content">
+                            <p><strong>{{ prestamo.usuario_nombre }}</strong> prestó <strong>{{ prestamo.producto_nombre }}</strong></p>
+                            <small>{{ prestamo.fecha_prestamo.strftime('%d/%m/%Y %H:%M') if prestamo.fecha_prestamo else 'N/A' }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="text-align: center; padding: 2rem; color: #6c757d;">No hay actividad reciente</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔗 Acciones Rápidas</h2>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="btn btn-secondary" onclick="showForm()" style="width: 100%; margin-bottom: 0.5rem;">
+                        ➕ Nuevo Préstamo
+                    </button>
+                    <a href="{{ url_for('mysql_usuarios') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        👥 Ver Usuarios
+                    </a>
+                    <a href="{{ url_for('mysql_productos') }}" class="btn btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">
+                        📚 Ver Productos
+                    </a>
+                    <a href="{{ url_for('mysql_setup') }}" class="btn btn-secondary" style="width: 100%;">
+                        🔄 Reconfigurar MySQL
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showForm() {
+    document.getElementById('prestamo-form').style.display = 'block';
+}
+
+function hideForm() {
+    document.getElementById('prestamo-form').style.display = 'none';
+}
+</script>
+
+<style>
+.row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.col-md-8 {
+    flex: 2;
+}
+
+.col-md-6 {
+    flex: 1;
+}
+
+.col-md-4 {
+    flex: 1;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #495057;
+}
+
+.prestamo-form {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.form-content {
+    padding: 1.5rem;
+}
+
+.form-content h3 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table th {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+}
+
+.table tr:hover {
+    background: #f8f9fa;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+}
+
+.badge-primary {
+    background: #007bff;
+    color: white;
+}
+
+.badge-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #667eea;
+}
+
+.stat-item h3 {
+    margin: 0;
+    font-size: 2rem;
+    color: #667eea;
+}
+
+.stat-item p {
+    margin: 0.5rem 0 0 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.activity-list {
+    padding: 1.5rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.activity-content p {
+    margin: 0;
+    color: #495057;
+}
+
+.activity-content small {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.5rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 0.25rem;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+    
+    .col-md-8,
+    .col-md-6,
+    .col-md-4 {
+        flex: 1;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-header">
+        <h1>👤 Mi Perfil</h1>
+        <p>Actualiza tu información personal y preferencias</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="profile-form">
+                <div class="form-header">
+                    <h2>📝 Información Personal</h2>
+                </div>
+                
+                <form method="POST" class="auth-form">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-group">
+                        {{ form.nombre.label(class="form-label") }}
+                        {{ form.nombre(class="form-control") }}
+                        {% if form.nombre.errors %}
+                            <div class="error-messages">
+                                {% for error in form.nombre.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                        {% if form.email.errors %}
+                            <div class="error-messages">
+                                {% for error in form.email.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-actions">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="password-section">
+                <div class="form-header">
+                    <h2>🔐 Cambiar Contraseña</h2>
+                    <p>Si deseas cambiar tu contraseña, haz clic aquí</p>
+                </div>
+                
+                <a href="{{ url_for('change_password') }}" class="btn btn-secondary">
+                    🔐 Cambiar Contraseña
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="sidebar">
+                <div class="user-card">
+                    <div class="user-avatar">
+                        <h2>{{ current_user.nombre[0]|upper }}</h2>
+                    </div>
+                    <div class="user-info">
+                        <h3>{{ current_user.nombre }}</h3>
+                        <p>{{ current_user.mail }}</p>
+                        <small>Miembro desde: {{ current_user.fecha_registro.strftime('%d/%m/%Y') if current_user.fecha_registro else 'N/A' }}</small>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <h3>🔗 Acciones Rápidas</h3>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">🎯 Panel Principal</a>
+                        <a href="{{ url_for('change_password') }}" class="btn btn-secondary">🔐 Cambiar Contraseña</a>
+                        <a href="{{ url_for('mysql_productos') }}" class="btn btn-secondary">📚 Ver Productos</a>
+                        <a href="{{ url_for('mysql_prestamos') }}" class="btn btn-secondary">📋 Ver Préstamos</a>
+                    </div>
+                </div>
+                
+                <div class="security-info">
+                    <h3>🔒 Información de Seguridad</h3>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span>Contraseña:</span>
+                            <span class="status-secure">🔒 Encriptada</span>
+                        </div>
+                        <div class="info-item">
+                            <span>Estado:</span>
+                            <span class="status-active">✅ Activo</span>
+                        </div>
+                        <div class="info-item">
+                            <span>Último acceso:</span>
+                            <span>{{ moment().format('LLL') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.profile-header h1 {
+    margin: 0 0 0.5rem 0;
+    color: #495057;
+    font-size: 2.5rem;
+}
+
+.profile-header p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.col-md-8 {
+    flex: 2;
+}
+
+.col-md-4 {
+    flex: 1;
+}
+
+.profile-form,
+.password-section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.form-header {
+    margin-bottom: 2rem;
+}
+
+.form-header h2 {
+    margin: 0;
+    color: #495057;
+}
+
+.auth-form {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.error-messages {
+    margin-top: 0.5rem;
+}
+
+.error {
+    display: block;
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    margin-top: 2rem;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.user-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 2rem;
+    text-align: center;
+}
+
+.user-avatar {
+    margin-bottom: 1rem;
+}
+
+.user-avatar h2 {
+    margin: 0;
+    width: 60px;
+    height: 60px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.user-info h3 {
+    margin: 0 0 0.25rem 0;
+    color: #495057;
+}
+
+.user-info p {
+    margin: 0 0 0.25rem 0;
+    color: #6c757d;
+}
+
+.user-info small {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.quick-actions h3,
+.security-info h3 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.status-secure,
+.status-active {
+    color: #28a745;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+    
+    .col-md-8,
+    .col-md-4 {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}

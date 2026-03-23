@@ -8,10 +8,20 @@ from inventario.productos import Producto as ProductoSQLAlchemy
 from sqlalchemy.orm import Session
 from conexion.conexion import get_db_connection
 from conexion.models import Usuario, ProductoMySQL, Categoria, Prestamo
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from auth.models import User
+from auth.forms import LoginForm, RegisterForm, ProfileForm, ChangePasswordForm
 
 # Configuración simple para caso educativo
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'clave-secreta-educativa'
+
+# Configuración de Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
+login_manager.login_message_category = 'info'
 
 # Inicializar el inventario global
 inventario = Inventario()
@@ -31,6 +41,11 @@ try:
 except Exception as e:
     print(f"Error conectando a MySQL: {e}")
     print("Asegúrate de tener MySQL instalado y configurado")
+
+# User loader para Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get_by_id(int(user_id))
 
 @app.route('/')
 def index():
@@ -684,6 +699,149 @@ def mysql_prestamo_devolver(id_prestamo):
         flash(f'❌ Error: {e}', 'error')
     
     return redirect(url_for('mysql_prestamos'))
+
+# Rutas de autenticación
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Página de inicio de sesión"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = LoginForm()
+    
+    if form.validate_on_submit():
+        user = User.get_by_mail(form.email.data)
+        
+        if user and user.verify_password(form.password.data):
+            if user.is_active():
+                login_user(user, remember=form.remember_me.data)
+                flash(f'Bienvenido de nuevo, {user.nombre}!', 'success')
+                next_page = request.args.get('next')
+                return redirect(next_page or url_for('dashboard'))
+            else:
+                flash('Tu cuenta está desactivada. Contacta al administrador.', 'warning')
+        else:
+            flash('Email o contraseña incorrectos.', 'danger')
+    
+    return render_template('auth/login.html', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Página de registro de usuarios"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = RegisterForm()
+    
+    if form.validate_on_submit():
+        # Verificar si el email ya existe
+        existing_user = User.get_by_mail(form.email.data)
+        if existing_user:
+            flash('Este email ya está registrado. Usa otro email o inicia sesión.', 'warning')
+            return render_template('auth/register.html', form=form)
+        
+        # Crear nuevo usuario
+        usuario_db = Usuario(
+            nombre=form.nombre.data,
+            mail=form.email.data,
+            password=form.password.data
+        )
+        
+        if usuario_db.create():
+            flash('¡Registro exitoso! Ahora puedes iniciar sesión.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Error al registrar el usuario. Intenta nuevamente.', 'danger')
+    
+    return render_template('auth/register.html', form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Cerrar sesión del usuario"""
+    logout_user()
+    flash('Has cerrado sesión exitosamente.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Panel principal del usuario autenticado"""
+    # Obtener estadísticas del usuario
+    try:
+        prestamos = Prestamo.get_by_usuario(current_user.id)
+        productos_mysql = ProductoMySQL.get_all()
+        usuarios = Usuario.get_all()
+        
+        # Estadísticas
+        stats = {
+            'total_prestamos': len(prestamos),
+            'prestamos_activos': len([p for p in prestamos if p['estado'] == 'activo']),
+            'total_productos': len(productos_mysql),
+            'total_usuarios': len(usuarios)
+        }
+        
+        return render_template('auth/dashboard.html', 
+                         prestamos=prestamos[:5],  # Últimos 5 préstamos
+                         stats=stats)
+    
+    except Exception as e:
+        flash(f'Error cargando el dashboard: {e}', 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    """Perfil del usuario"""
+    form = ProfileForm()
+    
+    if request.method == 'GET':
+        form.nombre.data = current_user.nombre
+        form.email.data = current_user.mail
+    
+    if form.validate_on_submit():
+        # Verificar si el email ya existe (y no es el del usuario actual)
+        existing_user = User.get_by_mail(form.email.data)
+        if existing_user and existing_user.id != current_user.id:
+            flash('Este email ya está en uso por otro usuario.', 'warning')
+            return render_template('auth/profile.html', form=form)
+        
+        # Actualizar usuario en la base de datos
+        usuario_db = Usuario.get_by_id(current_user.id)
+        usuario_db.nombre = form.nombre.data
+        usuario_db.mail = form.email.data
+        
+        if usuario_db.update():
+            # Actualizar objeto current_user
+            current_user.nombre = form.nombre.data
+            current_user.mail = form.email.data
+            flash('Perfil actualizado exitosamente.', 'success')
+        else:
+            flash('Error al actualizar el perfil.', 'danger')
+    
+    return render_template('auth/profile.html', form=form)
+
+@app.route('/change_password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Cambiar contraseña del usuario"""
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        # Verificar contraseña actual
+        usuario_db = Usuario.get_by_id(current_user.id)
+        if usuario_db.verify_password(form.current_password.data):
+            # Actualizar contraseña
+            usuario_db.password = form.new_password.data
+            if usuario_db.update():
+                flash('Contraseña cambiada exitosamente.', 'success')
+                return redirect(url_for('profile'))
+            else:
+                flash('Error al cambiar la contraseña.', 'danger')
+        else:
+            flash('La contraseña actual es incorrecta.', 'danger')
+    
+    return render_template('auth/change_password.html', form=form)
 
 if __name__ == '__main__':
     # Configuración simple para caso educativo

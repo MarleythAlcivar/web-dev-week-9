@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Producto - Sistema CRUD{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>✏️ Editar Producto</h1>
+        <p>Actualiza la información del producto seleccionado</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="form-container">
+        <form method="POST" class="product-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.nombre.label(class="form-label") }}
+                        {{ form.nombre(class="form-control") }}
+                        {% if form.nombre.errors %}
+                            <div class="error-messages">
+                                {% for error in form.nombre.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Nombre único del producto (3-100 caracteres)</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.categoria.label(class="form-label") }}
+                        {{ form.categoria(class="form-control") }}
+                        {% if form.categoria.errors %}
+                            <div class="error-messages">
+                                {% for error in form.categoria.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Categoría para organizar el producto</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.descripcion.label(class="form-label") }}
+                {{ form.descripcion(class="form-control", rows="4") }}
+                {% if form.descripcion.errors %}
+                    <div class="error-messages">
+                        {% for error in form.descripcion.errors %}
+                            <span class="error">{{ error }}</span>
+                                {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Descripción detallada del producto (10-500 caracteres)</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.precio.label(class="form-label") }}
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            {{ form.precio(class="form-control") }}
+                        </div>
+                        {% if form.precio.errors %}
+                            <div class="error-messages">
+                                {% for error in form.precio.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Precio unitario del producto</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.stock.label(class="form-label") }}
+                        {{ form.stock(class="form-control") }}
+                        {% if form.stock.errors %}
+                            <div class="error-messages">
+                                {% for error in form.stock.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Cantidad disponible en inventario</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    {{ form.activo(class="form-check-input") }}
+                    {{ form.activo.label(class="form-check-label") }}
+                </div>
+                <small class="form-text">Marca si el producto está disponible para venta</small>
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+                <a href="{{ url_for('productos_index') }}" class="btn btn-secondary btn-lg">
+                    Cancelar
+                </a>
+                <button type="button" class="btn btn-info btn-lg" onclick="updateStock()">
+                    📦 Actualizar Stock
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Información del Producto Actual -->
+    <div class="info-section">
+        <h3>📊 Información Actual del Producto</h3>
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-header">
+                    <h4>ID del Producto</h4>
+                </div>
+                <div class="info-body">
+                    <p class="info-value">{{ producto.id_producto }}</p>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <h4>Valor Total en Inventario</h4>
+                </div>
+                <div class="info-body">
+                    <p class="info-value">${{ "%.2f"|format(producto.precio * producto.stock) }}</p>
+                    <small class="info-detail">{{ producto.stock }} unidades × ${{ "%.2f"|format(producto.precio) }}</small>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <h4>Estado del Stock</h4>
+                </div>
+                <div class="info-body">
+                    <span class="badge {% if producto.stock <= 5 %}badge-danger{% elif producto.stock <= 10 %}badge-warning{% else %}badge-success{% endif %}">
+                        {% if producto.stock == 0 %}Agotado{% elif producto.stock <= 5 %}Crítico{% elif producto.stock <= 10 %}Bajo{% else %}Adecuado{% endif %}
+                    </span>
+                    <small class="info-detail">{{ producto.stock }} unidades disponibles</small>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <h4>Fecha de Registro</h4>
+                </div>
+                <div class="info-body">
+                    <p class="info-value">{{ producto.fecha_registro.strftime('%d/%m/%Y') if producto.fecha_registro else 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Actualizar Stock -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📦 Actualizar Stock</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="stockForm" method="POST" action="{{ url_for('producto_update_stock', id=producto.id_producto) }}">
+                    <div class="form-group">
+                        <label for="newStock">Nuevo Stock:</label>
+                        <input type="number" id="newStock" name="stock" class="form-control" 
+                               value="{{ producto.stock }}" min="0" required>
+                        <small class="form-text">Ingresa la nueva cantidad de stock</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+.product-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group-prepend {
+    display: flex;
+    margin-right: -1px;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    text-align: center;
+    white-space: nowrap;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 8px 0 0 8px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.form-check-input {
+    margin-right: 0.5rem;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.form-check-label {
+    color: #495057;
+    font-weight: 500;
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.error-messages {
+    margin-top: 0.5rem;
+}
+
+.error {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+    transform: translateY(-2px);
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.info-section {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.info-section h3 {
+    text-align: center;
+    color: #495057;
+    margin-bottom: 2rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+    text-align: center;
+    border: 2px solid #e9ecef;
+}
+
+.info-header h4 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.info-body .info-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    margin: 0;
+}
+
+.info-detail {
+    display: block;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.badge-warning {
+    background: #ffc107;
+    color: #212529;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.badge-danger {
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-dialog {
+    background-color: white;
+    margin: 15% auto;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    margin: 0;
+    color: #17a2b8;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function updateStock() {
+    document.getElementById('stockModal').style.display = 'block';
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('stockModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Cerrar modal con el botón X
+document.querySelector('.close').onclick = function() {
+    document.getElementById('stockModal').style.display = 'none';
+}
+</script>
+{% endblock %}

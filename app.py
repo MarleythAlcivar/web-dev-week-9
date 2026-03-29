@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response, session, flash, send_file
 from datetime import datetime
 from models import Inventario, Producto
 from inventario.inventario import FilePersistence
@@ -11,6 +11,10 @@ from conexion.models import Usuario, ProductoMySQL, Categoria, Prestamo
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from auth.models import User
 from auth.forms import LoginForm, RegisterForm, ProfileForm, ChangePasswordForm
+from models.producto import Producto
+from services.producto_service import ProductoService
+from forms.producto_form import ProductoForm, SearchForm, CategoryFilterForm, StockUpdateForm, DeleteForm
+from reports.pdf_generator import PDFGenerator
 
 # Configuración simple para caso educativo
 app = Flask(__name__)
@@ -699,6 +703,223 @@ def mysql_prestamo_devolver(id_prestamo):
         flash(f'❌ Error: {e}', 'error')
     
     return redirect(url_for('mysql_prestamos'))
+
+# Rutas del Sistema CRUD
+@app.route('/productos', methods=['GET'])
+@login_required
+def productos_index():
+    """Página principal de productos con filtros y búsqueda"""
+    page = request.args.get('page', 1, type=int)
+    search_term = request.args.get('search', '')
+    categoria = request.args.get('categoria', '')
+    
+    # Crear formularios
+    search_form = SearchForm()
+    category_form = CategoryFilterForm()
+    
+    # Obtener productos
+    if search_term:
+        result = ProductoService.search_products(search_term)
+        productos = result['data'] if result['success'] else []
+    elif categoria:
+        result = ProductoService.get_products_by_category(categoria)
+        productos = result['data'] if result['success'] else []
+    else:
+        result = ProductoService.get_all_products()
+        productos = result['data'] if result['success'] else []
+    
+    # Obtener estadísticas
+    stats_result = ProductoService.get_statistics()
+    stats = stats_result['data'] if stats_result['success'] else {}
+    
+    # Paginación simple
+    per_page = 10
+    total_items = len(productos)
+    total_pages = (total_items + per_page - 1) // per_page
+    start = (page - 1) * per_page
+    end = start + per_page
+    productos_page = productos[start:end]
+    
+    return render_template('productos/index.html',
+                         productos=productos_page,
+                         stats=stats,
+                         search_form=search_form,
+                         category_form=category_form,
+                         current_page=page,
+                         total_pages=total_pages,
+                         total_items=total_items)
+
+@app.route('/productos/create', methods=['GET', 'POST'])
+@login_required
+def producto_create():
+    """Crear nuevo producto"""
+    form = ProductoForm()
+    
+    if form.validate_on_submit():
+        result = ProductoService.create_product(
+            form.nombre.data,
+            form.descripcion.data,
+            form.precio.data,
+            form.stock.data,
+            form.categoria.data
+        )
+        
+        if result['success']:
+            flash(f'✅ {result["message"]}', 'success')
+            return redirect(url_for('productos_index'))
+        else:
+            flash(f'❌ {result["message"]}', 'danger')
+    
+    return render_template('productos/create.html', form=form)
+
+@app.route('/productos/view/<int:id>', methods=['GET'])
+@login_required
+def producto_view(id):
+    """Ver detalles de un producto"""
+    result = ProductoService.get_product_by_id(id)
+    
+    if result['success']:
+        return render_template('productos/view.html', producto=result['data'])
+    else:
+        flash(f'❌ {result["message"]}', 'danger')
+        return redirect(url_for('productos_index'))
+
+@app.route('/productos/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def producto_edit(id):
+    """Editar producto existente"""
+    # Obtener producto actual
+    result = ProductoService.get_product_by_id(id)
+    
+    if not result['success']:
+        flash(f'❌ {result["message"]}', 'danger')
+        return redirect(url_for('productos_index'))
+    
+    producto = result['data']
+    
+    form = ProductoForm()
+    
+    if request.method == 'GET':
+        # Cargar datos actuales en el formulario
+        form.nombre.data = producto['nombre']
+        form.descripcion.data = producto['descripcion']
+        form.precio.data = producto['precio']
+        form.stock.data = producto['stock']
+        form.categoria.data = producto['categoria']
+        form.activo.data = producto['activo']
+    
+    if form.validate_on_submit():
+        result = ProductoService.update_product(
+            id,
+            form.nombre.data,
+            form.descripcion.data,
+            form.precio.data,
+            form.stock.data,
+            form.categoria.data,
+            form.activo.data
+        )
+        
+        if result['success']:
+            flash(f'✅ {result["message"]}', 'success')
+            return redirect(url_for('productos_index'))
+        else:
+            flash(f'❌ {result["message"]}', 'danger')
+    
+    return render_template('productos/edit.html', form=form, producto=producto)
+
+@app.route('/productos/delete/<int:id>', methods=['POST'])
+@login_required
+def producto_delete(id):
+    """Eliminar producto"""
+    result = ProductoService.delete_product(id)
+    
+    if result['success']:
+        flash(f'✅ {result["message"]}', 'success')
+    else:
+        flash(f'❌ {result["message"]}', 'danger')
+    
+    return redirect(url_for('productos_index'))
+
+@app.route('/productos/update-stock/<int:id>', methods=['POST'])
+@login_required
+def producto_update_stock(id):
+    """Actualizar stock de un producto"""
+    stock = request.form.get('stock', type=int)
+    
+    result = ProductoService.update_stock(id, stock)
+    
+    if result['success']:
+        flash(f'✅ {result["message"]}', 'success')
+    else:
+        flash(f'❌ {result["message"]}', 'danger')
+    
+    return redirect(url_for('producto_view', id=id))
+
+@app.route('/productos/report', methods=['GET'])
+@login_required
+def producto_report():
+    """Generar reporte PDF de productos"""
+    try:
+        # Obtener todos los productos
+        result = ProductoService.get_all_products()
+        productos = result['data'] if result['success'] else []
+        
+        if not productos:
+            flash('❌ No hay productos para generar el reporte', 'warning')
+            return redirect(url_for('productos_index'))
+        
+        # Generar PDF
+        pdf_generator = PDFGenerator(f"productos_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+        pdf_result = pdf_generator.generate_product_report(productos)
+        
+        if pdf_result['success']:
+            # Enviar archivo al usuario
+            return send_file(
+                pdf_result['filepath'],
+                as_attachment=True,
+                download_name=pdf_result['filename'],
+                mimetype='application/pdf'
+            )
+        else:
+            flash(f'❌ {pdf_result["message"]}', 'danger')
+            return redirect(url_for('productos_index'))
+    
+    except Exception as e:
+        flash(f'❌ Error al generar reporte: {str(e)}', 'danger')
+        return redirect(url_for('productos_index'))
+
+@app.route('/productos/low-stock-report', methods=['GET'])
+@login_required
+def producto_low_stock_report():
+    """Generar reporte PDF de productos con bajo stock"""
+    try:
+        # Obtener productos con bajo stock
+        result = ProductoService.get_low_stock_products()
+        productos = result['data'] if result['success'] else []
+        
+        if not productos:
+            flash('✅ No hay productos con bajo stock', 'success')
+            return redirect(url_for('productos_index'))
+        
+        # Generar PDF
+        pdf_generator = PDFGenerator(f"low_stock_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+        pdf_result = pdf_generator.generate_low_stock_report(productos)
+        
+        if pdf_result['success']:
+            # Enviar archivo al usuario
+            return send_file(
+                pdf_result['filepath'],
+                as_attachment=True,
+                download_name=pdf_result['filename'],
+                mimetype='application/pdf'
+            )
+        else:
+            flash(f'❌ {pdf_result["message"]}', 'danger')
+            return redirect(url_for('productos_index'))
+    
+    except Exception as e:
+        flash(f'❌ Error al generar reporte de bajo stock: {str(e)}', 'danger')
+        return redirect(url_for('productos_index'))
 
 # Rutas de autenticación
 @app.route('/login', methods=['GET', 'POST'])

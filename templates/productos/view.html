@@ -1,0 +1,633 @@
+{% extends "base.html" %}
+
+{% block title %}Ver Producto - Sistema CRUD{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>📦 Detalles del Producto</h1>
+        <p>Información completa del producto seleccionado</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="product-detail">
+        <div class="product-header">
+            <div class="product-info">
+                <h2>{{ producto.nombre }}</h2>
+                <div class="product-meta">
+                    <span class="badge {% if producto.activo %}badge-success{% else %}badge-secondary{% endif %}">
+                        {% if producto.activo %}✅ Activo{% else %}❌ Inactivo{% endif %}
+                    </span>
+                    {% if producto.categoria %}
+                    <span class="badge badge-category">
+                        📂 {{ producto.categoria }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="product-actions">
+                <a href="{{ url_for('producto_edit', id=producto.id_producto) }}" class="btn btn-warning">
+                    ✏️ Editar
+                </a>
+                <button type="button" class="btn btn-info" onclick="updateStock()">
+                    📦 Actualizar Stock
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                    🗑️ Eliminar
+                </button>
+            </div>
+        </div>
+
+        <div class="product-content">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="description-section">
+                        <h3>📝 Descripción</h3>
+                        <div class="description-content">
+                            <p>{{ producto.descripcion }}</p>
+                        </div>
+                    </div>
+
+                    <div class="details-section">
+                        <h3>📊 Información Detallada</h3>
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <span class="label">ID del Producto:</span>
+                                <span class="value">{{ producto.id_producto }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Categoría:</span>
+                                <span class="value">{{ producto.categoria or 'Sin categoría' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Fecha de Registro:</span>
+                                <span class="value">{{ producto.fecha_registro.strftime('%d/%m/%Y %H:%M') if producto.fecha_registro else 'N/A' }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="label">Última Actualización:</span>
+                                <span class="value">{{ producto.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') if producto.fecha_actualizacion else 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="pricing-section">
+                        <h3>💰 Información de Precios</h3>
+                        <div class="price-card">
+                            <div class="price-main">
+                                <span class="price-label">Precio Unitario</span>
+                                <span class="price-value">${{ "%.2f"|format(producto.precio) }}</span>
+                            </div>
+                            <div class="price-total">
+                                <span class="price-label">Valor Total en Inventario</span>
+                                <span class="price-value">${{ "%.2f"|format(producto.precio * producto.stock) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stock-section">
+                        <h3>📦 Estado del Inventario</h3>
+                        <div class="stock-card">
+                            <div class="stock-main">
+                                <span class="stock-label">Unidades Disponibles</span>
+                                <span class="stock-value {% if producto.stock <= 5 %}stock-danger{% elif producto.stock <= 10 %}stock-warning{% else %}stock-success{% endif %}">
+                                    {{ producto.stock }}
+                                </span>
+                            </div>
+                            <div class="stock-status">
+                                <span class="status-badge {% if producto.stock == 0 %}status-out{% elif producto.stock <= 5 %}status-critical{% elif producto.stock <= 10 %}status-low{% else %}status-good{% endif %}">
+                                    {% if producto.stock == 0 %}
+                                        🚫 Agotado
+                                    {% elif producto.stock <= 5 %}
+                                        ⚠️ Crítico
+                                    {% elif producto.stock <= 10 %}
+                                        📉 Bajo
+                                    {% else %}
+                                        ✅ Adecuado
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="stock-recommendation">
+                                {% if producto.stock == 0 %}
+                                <p class="text-danger">
+                                    <strong>Acción Inmediata Requerida:</strong><br>
+                                    El producto está agotado. Reabastecer lo antes posible.
+                                </p>
+                                {% elif producto.stock <= 5 %}
+                                <p class="text-warning">
+                                    <strong>Recomendación:</strong><br>
+                                    Nivel de stock crítico. Considerar reabastecimiento urgente.
+                                </p>
+                                {% elif producto.stock <= 10 %}
+                                <p class="text-info">
+                                    <strong>Recomendación:</strong><br>
+                                    Nivel de stock bajo. Monitorear y planificar reabastecimiento.
+                                </p>
+                                {% else %}
+                                <p class="text-success">
+                                    <strong>Estado:</strong><br>
+                                    Nivel de stock adecuado. No se requiere acción inmediata.
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation-section">
+        <a href="{{ url_for('productos_index') }}" class="btn btn-secondary">
+            ← Volver a la Lista
+        </a>
+    </div>
+</div>
+
+<!-- Modal para Actualizar Stock -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📦 Actualizar Stock</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="stockForm" method="POST" action="{{ url_for('producto_update_stock', id=producto.id_producto) }}">
+                    <div class="form-group">
+                        <label for="newStock">Stock Actual:</label>
+                        <input type="text" class="form-control" value="{{ producto.stock }}" disabled>
+                        <small class="form-text">Cantidad actual en inventario</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="newStock">Nuevo Stock:</label>
+                        <input type="number" id="newStock" name="stock" class="form-control" 
+                               value="{{ producto.stock }}" min="0" required>
+                        <small class="form-text">Ingresa la nueva cantidad de stock</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Actualizar Stock</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⚠️ Confirmar Eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este producto?</p>
+                <p><strong>{{ producto.nombre }}</strong></p>
+                <p class="text-danger">Esta acción no se puede deshacer.</p>
+                <form id="deleteForm" method="POST" action="{{ url_for('producto_delete', id=producto.id_producto) }}">
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-danger">Eliminar Producto</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.product-detail {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.product-info h2 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+    font-size: 2rem;
+}
+
+.product-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: #28a745;
+    color: white;
+}
+
+.badge-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.badge-category {
+    background: #17a2b8;
+    color: white;
+}
+
+.product-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    transform: translateY(-2px);
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.description-section,
+.details-section {
+    margin-bottom: 2rem;
+}
+
+.description-section h3,
+.details-section h3 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.description-content {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.description-content p {
+    margin: 0;
+    line-height: 1.6;
+    color: #495057;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.detail-item .label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.detail-item .value {
+    font-weight: 700;
+    color: #667eea;
+}
+
+.pricing-section,
+.stock-section {
+    margin-bottom: 2rem;
+}
+
+.pricing-section h3,
+.stock-section h3 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.price-card,
+.stock-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    border: 2px solid #e9ecef;
+}
+
+.price-main,
+.stock-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.price-label,
+.stock-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.price-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.stock-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stock-success {
+    color: #28a745;
+}
+
+.stock-warning {
+    color: #ffc107;
+}
+
+.stock-danger {
+    color: #dc3545;
+}
+
+.price-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-good {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-low {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-critical {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-out {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+.stock-recommendation {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.stock-recommendation p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.text-success {
+    color: #155724;
+}
+
+.text-info {
+    color: #0c5460;
+}
+
+.text-warning {
+    color: #856404;
+}
+
+.text-danger {
+    color: #721c24;
+}
+
+.navigation-section {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-dialog {
+    background-color: white;
+    margin: 15% auto;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    margin: 0;
+    color: #495057;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.form-control:disabled {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .product-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .product-actions {
+        justify-content: center;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .price-main,
+    .stock-main {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+}
+</style>
+
+<script>
+function updateStock() {
+    document.getElementById('stockModal').style.display = 'block';
+}
+
+function confirmDelete() {
+    document.getElementById('deleteModal').style.display = 'block';
+}
+
+// Cerrar modales al hacer clic fuera
+window.onclick = function(event) {
+    const stockModal = document.getElementById('stockModal');
+    const deleteModal = document.getElementById('deleteModal');
+    
+    if (event.target == stockModal) {
+        stockModal.style.display = 'none';
+    }
+    if (event.target == deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+}
+
+// Cerrar modales con el botón X
+document.querySelectorAll('.close').forEach(function(btn) {
+    btn.onclick = function() {
+        this.closest('.modal').style.display = 'none';
+    };
+});
+</script>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Producto - Sistema CRUD{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>➕ Crear Nuevo Producto</h1>
+        <p>Registra un nuevo producto en el sistema</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="form-container">
+        <form method="POST" class="product-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.nombre.label(class="form-label") }}
+                        {{ form.nombre(class="form-control") }}
+                        {% if form.nombre.errors %}
+                            <div class="error-messages">
+                                {% for error in form.nombre.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Nombre único del producto (3-100 caracteres)</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.categoria.label(class="form-label") }}
+                        {{ form.categoria(class="form-control") }}
+                        {% if form.categoria.errors %}
+                            <div class="error-messages">
+                                {% for error in form.categoria.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Categoría para organizar el producto</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.descripcion.label(class="form-label") }}
+                {{ form.descripcion(class="form-control", rows="4") }}
+                {% if form.descripcion.errors %}
+                    <div class="error-messages">
+                        {% for error in form.descripcion.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-text">Descripción detallada del producto (10-500 caracteres)</small>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.precio.label(class="form-label") }}
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            {{ form.precio(class="form-control") }}
+                        </div>
+                        {% if form.precio.errors %}
+                            <div class="error-messages">
+                                {% for error in form.precio.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Precio unitario del producto</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.stock.label(class="form-label") }}
+                        {{ form.stock(class="form-control") }}
+                        {% if form.stock.errors %}
+                            <div class="error-messages">
+                                {% for error in form.stock.errors %}
+                                    <span class="error">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text">Cantidad disponible en inventario</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-check">
+                    {{ form.activo(class="form-check-input") }}
+                    {{ form.activo.label(class="form-check-label") }}
+                </div>
+                <small class="form-text">Marca si el producto está disponible para venta</small>
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+                <a href="{{ url_for('productos_index') }}" class="btn btn-secondary btn-lg">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Previsualización -->
+    <div class="preview-section">
+        <h3>📋 Previsualización del Producto</h3>
+        <div class="preview-card">
+            <div class="preview-header">
+                <h4 id="preview-name">Nombre del Producto</h4>
+                <span id="preview-category" class="badge badge-category">Sin categoría</span>
+            </div>
+            <div class="preview-body">
+                <p id="preview-description">La descripción aparecerá aquí...</p>
+                <div class="preview-details">
+                    <div class="detail-item">
+                        <span class="label">Precio:</span>
+                        <span id="preview-price" class="value">$0.00</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Stock:</span>
+                        <span id="preview-stock" class="value">0</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="label">Estado:</span>
+                        <span id="preview-status" class="badge badge-success">Activo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+.product-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group-prepend {
+    display: flex;
+    margin-right: -1px;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    text-align: center;
+    white-space: nowrap;
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 8px 0 0 8px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.form-check-input {
+    margin-right: 0.5rem;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.form-check-label {
+    color: #495057;
+    font-weight: 500;
+}
+
+.form-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.error-messages {
+    margin-top: 0.5rem;
+}
+
+.error {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.preview-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.preview-section h3 {
+    text-align: center;
+    color: #495057;
+    margin-bottom: 1.5rem;
+}
+
+.preview-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 2rem;
+    border: 2px solid #e9ecef;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.preview-header h4 {
+    margin: 0;
+    color: #495057;
+    font-size: 1.5rem;
+}
+
+.badge-category {
+    background: #6c757d;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.preview-body p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.preview-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.detail-item .label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.detail-item .value {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .preview-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+</style>
+
+<script>
+// Previsualización en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const nombreInput = document.querySelector('input[name="nombre"]');
+    const descripcionInput = document.querySelector('textarea[name="descripcion"]');
+    const precioInput = document.querySelector('input[name="precio"]');
+    const stockInput = document.querySelector('input[name="stock"]');
+    const categoriaSelect = document.querySelector('select[name="categoria"]');
+    const activoCheckbox = document.querySelector('input[name="activo"]');
+
+    // Elementos de previsualización
+    const previewName = document.getElementById('preview-name');
+    const previewDescription = document.getElementById('preview-description');
+    const previewPrice = document.getElementById('preview-price');
+    const previewStock = document.getElementById('preview-stock');
+    const previewCategory = document.getElementById('preview-category');
+    const previewStatus = document.getElementById('preview-status');
+
+    function updatePreview() {
+        // Actualizar nombre
+        previewName.textContent = nombreInput.value || 'Nombre del Producto';
+        
+        // Actualizar descripción
+        previewDescription.textContent = descripcionInput.value || 'La descripción aparecerá aquí...';
+        
+        // Actualizar precio
+        const precio = parseFloat(precioInput.value) || 0;
+        previewPrice.textContent = `$${precio.toFixed(2)}`;
+        
+        // Actualizar stock
+        const stock = parseInt(stockInput.value) || 0;
+        previewStock.textContent = stock;
+        
+        // Actualizar categoría
+        const categoria = categoriaSelect.value;
+        previewCategory.textContent = categoria || 'Sin categoría';
+        previewCategory.className = categoria ? 'badge badge-primary' : 'badge badge-category';
+        
+        // Actualizar estado
+        if (activoCheckbox.checked) {
+            previewStatus.textContent = 'Activo';
+            previewStatus.className = 'badge badge-success';
+        } else {
+            previewStatus.textContent = 'Inactivo';
+            previewStatus.className = 'badge badge-secondary';
+        }
+    }
+
+    // Agregar event listeners
+    nombreInput.addEventListener('input', updatePreview);
+    descripcionInput.addEventListener('input', updatePreview);
+    precioInput.addEventListener('input', updatePreview);
+    stockInput.addEventListener('input', updatePreview);
+    categoriaSelect.addEventListener('change', updatePreview);
+    activoCheckbox.addEventListener('change', updatePreview);
+
+    // Inicializar previsualización
+    updatePreview();
+});
+</script>
+{% endblock %}
